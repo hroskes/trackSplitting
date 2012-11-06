@@ -1,6 +1,20 @@
+#include "TFile.h"
+#include "TTree.h"
+#include "TString.h"
+#include <iostream>
+
+using namespace std;
+
+// = = = = = = = = = = 
+// global variables
+// = = = = = = = = = = 
 
 bool debug_=false;
 
+
+// = = = = = = = = = = 
+// main function 
+// = = = = = = = = = = 
 
 void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
 
