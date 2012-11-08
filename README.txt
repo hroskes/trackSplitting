@@ -9,7 +9,7 @@ root -l -n
 .L addDifference.C+
 addDifference("myFile.root")
 
-The output will be save to myFile_wDiffs.root
+The output will be saved to myFile_wDiffs.root
 
 ==================
 unbinnedFit.C ----

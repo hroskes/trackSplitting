@@ -8,7 +8,15 @@ void unbinnedFits(TString varName="Delta_pt",
   gROOT->ProcessLine(".L ~whitbeck/tdrstyle.C");
   setTDRStyle();
 
-  RooRealVar x(varName,"#Delta d_{xy}",range_low,range_high);
+  TString fancyVarName = varName;
+  if (varName == "Delta_pt")
+    fancyVarName = "#Delta p_{T}";
+  if (varName == "Delta_dz")
+    fancyVarName = "#Delta d_{z}";
+  if (varName == "Delta_dxy")
+    fancyVarName = "#Delta d_{xy}";
+
+  RooRealVar x(varName,fancyVarName,range_low,range_high);
   RooRealVar phi("phi_org","#phi",-3.2,0);
   RooRealVar eta("eta_org","#eta",-2.,2.);
   RooRealVar pt("pt_org","p_{T}",0.0,1000.0);
