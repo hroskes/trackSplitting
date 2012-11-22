@@ -5,8 +5,8 @@ void unbinnedFits(TString varName="Delta_pt",
 		  double range_low=-10., double range_high=10.,
 		  TString cutString="pt_org>50."){
 
-  gROOT->ProcessLine(".L ~whitbeck/tdrstyle.C");
-  setTDRStyle();
+//  gROOT->ProcessLine(".L ~whitbeck/tdrstyle.C");
+//  setTDRStyle();
 
   TString fancyVarName = varName;
   if (varName == "Delta_pt")
@@ -15,6 +15,10 @@ void unbinnedFits(TString varName="Delta_pt",
     fancyVarName = "#Delta d_{z}";
   if (varName == "Delta_dxy")
     fancyVarName = "#Delta d_{xy}";
+  if (varName == "Delta_phi")
+    fancyVarName = "#Delta #phi";
+  if (varName == "Delta_eta")
+    fancyVarName = "#Delta #eta";
 
   RooRealVar x(varName,fancyVarName,range_low,range_high);
   RooRealVar phi("phi_org","#phi",-3.2,0);
