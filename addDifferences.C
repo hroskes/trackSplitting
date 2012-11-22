@@ -34,7 +34,7 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
   TTree* evt_tree=(TTree*) ch->CloneTree(0, "fast");
   
 
-  double pt1,pt2,dxy1,dxy2,dz1,dz2;
+  double pt1,pt2,dxy1,dxy2,dz1,dz2,eta1,eta2,phi1,phi2;
 
   ch->SetBranchAddress("pt1_spl",&pt1);
   ch->SetBranchAddress("pt2_spl",&pt2);
@@ -45,11 +45,19 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
   ch->SetBranchAddress("dz1_spl",&dz1);
   ch->SetBranchAddress("dz2_spl",&dz2);
 
-  double delta_pt, delta_dxy, delta_dz;
+  ch->SetBranchAddress("eta1_spl",&eta1);
+  ch->SetBranchAddress("eta2_spl",&eta2);
+
+  ch->SetBranchAddress("phi1_spl",&phi1);
+  ch->SetBranchAddress("phi2_spl",&phi2);
+
+  double delta_pt, delta_dxy, delta_dz, delta_eta, delta_phi;
 
   evt_tree->Branch("Delta_pt",&delta_pt,"Delta_pt/D");
   evt_tree->Branch("Delta_dz",&delta_dz,"Delta_dz/D");
   evt_tree->Branch("Delta_dxy",&delta_dxy,"Delta_dxy/D");
+  evt_tree->Branch("Delta_eta",&delta_eta,"Delta_eta/D");
+  evt_tree->Branch("Delta_phi",&delta_phi,"Delta_phi/D");
 
   for(int i=0; i<ch->GetEntries(); i++){
 
@@ -67,6 +75,8 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
     delta_pt = pt1-pt2;
     delta_dz = dz1-dz2;
     delta_dxy= dxy1-dxy2;
+    delta_eta= eta1-eta2;
+    delta_phi= phi1-phi2;
 
     evt_tree->Fill();
 
