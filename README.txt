@@ -35,14 +35,13 @@ root -l -n "unbinnedFits.C(\"Delta_pt\",-2.,2.,\"pt_org>20.&&pt_org<30.\")"
 etaDependence.C ----
 ====================
 
-TH1F *etaDependence(Char_t *variable = "Delta_pt",int multiply = 1)
+TH1F *etaDependence(Char_t *variable = "Delta_pt",Bool_t profile = kTRUE,Char_t saveas = "")
 
-plots the average absolute value of variable for each eta.
-For some variables (like Delta_dxy and Delta_dz) multiply
-needs to be something like 1000 or 10000, or it rounds to 0.
+Creates a profile (profile = kTRUE) or a scatter plot (profile = kFALSE) of variable vs. eta.
+To save it, enter a file name for saveas.
 
 To run:
 
 root -l -n
 .L etaDependence.C+
-addDifference("Delta_dxy",1000)  //(for example)
+addDifference("Delta_dxy",kTRUE,"Delta_dxy.png")  //(for example)
