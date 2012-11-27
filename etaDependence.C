@@ -1,7 +1,11 @@
 //profile = true:  profile
 //profile = false: scatter plot
-TH1 *etaDependence(Char_t *variable = "Delta_pt",Bool_t profile = kTRUE,Char_t *saveas = "")
+TH1 *etaDependence(Char_t *variable = "Delta_pt",Bool_t profile = kFALSE,Char_t *saveas = "")
 {
+
+    gROOT->ProcessLine(".L tdrstyle.C");
+    setTDRStyle();
+
     Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
     TFile *f = new TFile(file);
     TTree *tree = (TTree*)f->Get("splitterTree");
@@ -11,9 +15,9 @@ TH1 *etaDependence(Char_t *variable = "Delta_pt",Bool_t profile = kTRUE,Char_t *
     TString name = ss.str();
 
     if (profile)
-        TProfile *p = new TProfile("p",name,100,-2.5,2.5);
+        TProfile *p = new TProfile("p",name,25,-2.5,2.5);
     else
-        TH2F *p = new TH2F("p",name,100,-2.5,2.5,100,tree->GetMinimum(variable),tree->GetMaximum(variable));
+        TH2F *p = new TH2F("p",name,1000,-2.5,2.5,100000,tree->GetMinimum(variable),tree->GetMaximum(variable));
     Double_t var,eta;
     tree->SetBranchAddress(variable,&var);
     tree->SetBranchAddress("eta_org",&eta);
@@ -32,8 +36,12 @@ TH1 *etaDependence(Char_t *variable = "Delta_pt",Bool_t profile = kTRUE,Char_t *
     p->SetXTitle("eta_org");
     p->SetYTitle(variable);
     TCanvas *c1 = TCanvas::MakeDefCanvas();
-    p->Draw();
-    
+
+    if(profile)
+      p->Draw();
+    else
+      p->Draw("COLZ");
+
     if (saveas != "")
     {
         c1->SaveAs(saveas);
