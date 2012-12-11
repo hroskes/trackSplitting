@@ -1,10 +1,5 @@
 #include "tdrstyle.C"
 
-//profile =  true:   profile
-//profile =  false:  scatter plot
-//relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
-//relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
-
 Double_t findAverage(Char_t *variable,Char_t *relative = "1")
 {
     Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
@@ -45,7 +40,12 @@ Double_t findStdDev(Char_t *variable,Char_t *relative = "1")
     return TMath::Power(stddevsquared,.5);
 }
 
-TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFALSE,Bool_t relative = kFALSE,Double_t xnumberofsigmas = 10,Double_t ynumberofsigmas = 10,Char_t *saveas = "")
+//profile =  true:   profile
+//profile =  false:  scatter plot
+//relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
+//relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
+
+TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFALSE,Bool_t relative = kFALSE,Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 {
     setTDRStyle();
 
@@ -86,11 +86,11 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
 
     Double_t xaverage = findAverage(xvariable),
              xstddev  = findStdDev (xvariable),
-             xmin     = TMath::Max(xaverage - xnumberofsigmas * xstddev,tree->GetMinimum(xvariable)),
-             xmax     = TMath::Min(xaverage + xnumberofsigmas * xstddev,tree->GetMaximum(xvariable)),
+             xmin     = TMath::Max(xaverage - xcut * xstddev,tree->GetMinimum(xvariable)),
+             xmax     = TMath::Min(xaverage + xcut * xstddev,tree->GetMaximum(xvariable)),
              yaverage = findAverage(yvariable,relvariable),
              ystddev  = findStdDev (yvariable,relvariable),
-             ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ynumberofsigmas * ystddev,tree->GetMinimum(yvariable)),-tree->GetMaximum(yvariable)),
+             ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut * ystddev,tree->GetMinimum(yvariable)),-tree->GetMaximum(yvariable)),
              ymax     = -ymin;
 
     if (profile)
@@ -100,7 +100,7 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
     Double_t x,y,rel = 1;
     tree->SetBranchAddress(xvariable,&x);
     tree->SetBranchAddress(yvariable,&y);
-    if (relative)
+    if (relative && xvar != yvar)                       //if xvar == yvar, setting the branch here will undo setting it to x 2 lines earlier
         tree->SetBranchAddress(relvariable,&rel);
     
     int length = tree->GetEntries();
@@ -108,6 +108,10 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
     for (Int_t i = 0; i<length; i++)
     {
         tree->GetEntry(i);
+        if (relative && xvar == yvar)
+        {
+            rel = x;
+        }
         y /= rel;                                          // if !relative, rel = 1 from before
         if (ymin <= y && y <= ymax)
             p->Fill(x,y);
