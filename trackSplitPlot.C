@@ -1,8 +1,8 @@
 #include "tdrstyle.C"
 
-Double_t findAverage(Char_t *variable,Char_t *relative = "1")
+Double_t findAverage(Char_t *file,TString variable,Char_t *relative = "1")
 {
-    Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
+    cout << variable << endl;
     TFile *f = new TFile(file);
     TTree *tree = (TTree*)f->Get("splitterTree");
     Int_t length = tree->GetEntries();
@@ -18,15 +18,14 @@ Double_t findAverage(Char_t *variable,Char_t *relative = "1")
     return average;
 }
 
-Double_t findStdDev(Char_t *variable,Char_t *relative = "1")
+Double_t findStdDev(Char_t *file,TString variable,Char_t *relative = "1")
 {
-    Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
     TFile *f = new TFile(file);
     TTree *tree = (TTree*)f->Get("splitterTree");
     Int_t length = tree->GetEntries();
     Double_t var,
              rel = 1,
-             average = findAverage(variable,relative),
+             average = findAverage(file,variable,relative),
              stddevsquared = 0;
     tree->SetBranchAddress(variable,&var);
     if (relative[0] != '1')
@@ -45,11 +44,11 @@ Double_t findStdDev(Char_t *variable,Char_t *relative = "1")
 //relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
 //relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
 
-TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFALSE,Bool_t relative = kFALSE,Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
+TH1 *trackSplitPlot(Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root",Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFALSE,
+                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 {
     setTDRStyle();
 
-    Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
     TFile *f = new TFile(file);
     TTree *tree = (TTree*)f->Get("splitterTree");
 
@@ -84,12 +83,12 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
 
 //=======================================================
 
-    Double_t xaverage = findAverage(xvariable),
-             xstddev  = findStdDev (xvariable),
+    Double_t xaverage = findAverage(file,xvariable),
+             xstddev  = findStdDev (file,xvariable),
              xmin     = TMath::Max(xaverage - xcut * xstddev,tree->GetMinimum(xvariable)),
              xmax     = TMath::Min(xaverage + xcut * xstddev,tree->GetMaximum(xvariable)),
-             yaverage = findAverage(yvariable,relvariable),
-             ystddev  = findStdDev (yvariable,relvariable),
+             yaverage = findAverage(file,yvariable,relvariable),
+             ystddev  = findStdDev (file,yvariable,relvariable),
              ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut * ystddev,tree->GetMinimum(yvariable)),-tree->GetMaximum(yvariable)),
              ymax     = -ymin;
 
@@ -113,6 +112,8 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
             rel = x;
         }
         y /= rel;                                          // if !relative, rel = 1 from before
+        if (logscale)
+            y = fabs(y);
         if (ymin <= y && y <= ymax)
             p->Fill(x,y);
         if (((i+1)/1000)*1000 == i + 1 || i + 1 == length)
@@ -124,6 +125,7 @@ TH1 *etaDependence(Char_t *xvar = "eta",Char_t *yvar = "pt",Bool_t profile = kFA
     p->SetXTitle(xvariable);
     p->SetYTitle(yaxislabel);
     TCanvas *c1 = TCanvas::MakeDefCanvas();
+    c1->SetLogy((Bool_t)(logscale));
 
     if(profile)
         p->Draw();
