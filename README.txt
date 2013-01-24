@@ -120,6 +120,7 @@ Each file will have separate scatter plots, but the profiles will be made from a
  using nProfiles().
 So there will be 30*nFiles plots, but just 30 profiles.
 The parameters are all explained either in nProfiles.C or in the previous makePlots() function.
+However, names is also used in the filenames for the plots, so none of them can have spaces.
 
 To run:
 
