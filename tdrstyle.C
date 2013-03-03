@@ -30,7 +30,7 @@ void setTDRStyle() {
   gStyle->SetCanvasDefY(0);
 
   // For the Pad:
-  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadBorderMode(1);
   // gStyle->SetPadBorderSize(Width_t size = 1);
   gStyle->SetPadColor(kWhite);
   gStyle->SetPadGridX(false);
@@ -75,7 +75,6 @@ void setTDRStyle() {
   // gStyle->SetDateX(Float_t x = 0.01);
   // gStyle->SetDateY(Float_t y = 0.01);
 
-  gStyle->SetOptStat(0);
 
   /*
   // For the statistics box:
@@ -103,7 +102,7 @@ void setTDRStyle() {
 
   // For the Global title:
 
-  gStyle->SetOptTitle(0);
+  gStyle->SetOptTitle(0);                                             //==================================
   gStyle->SetTitleFont(42);
   gStyle->SetTitleColor(1);
   gStyle->SetTitleTextColor(1);
@@ -114,7 +113,7 @@ void setTDRStyle() {
   // gStyle->SetTitleX(0); // Set the position of the title box
   // gStyle->SetTitleY(0.985); // Set the position of the title box
   // gStyle->SetTitleStyle(Style_t style = 1001);
-  // gStyle->SetTitleBorderSize(2);
+  // gStyle->SetTitleBorderSize(2);                                     //*******************************88
 
   // For the axis titles:
 
@@ -170,3 +169,20 @@ void setTDRStyle() {
   gROOT->ForceStyle();
 
 }
+
+
+//from http://ultrahigh.org/2007/08/making-pretty-root-color-palettes/
+
+void set_plot_style()
+{
+    const Int_t NRGBs = 5;
+    const Int_t NCont = 255;
+
+    Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+    Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+    Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+    Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+    TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+    gStyle->SetNumberContours(NCont);
+}
+
