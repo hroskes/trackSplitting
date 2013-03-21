@@ -1,3 +1,10 @@
+===========================
+CosmicSplitterValidation.cc
+===========================
+
+To put in CMSSW_.../src/Alignment/OfflineValidation/plugins
+Adds more variables to the tree than the version there.
+
 =====================
 addDifferences.C ----
 =====================
@@ -10,6 +17,7 @@ root -l -n
 addDifference("myFile.root")
 
 The output will be saved to myFile_wDiffs.root
+Use this file for all of the scripts below
 
 ==================
 unbinnedFit.C ----
