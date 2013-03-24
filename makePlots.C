@@ -1,4 +1,4 @@
-#include "nProfiles.C"
+#include "trackSplitPlot.C"
 
 const Int_t xsize = 8;
 const Int_t ysize = 8;
@@ -97,9 +97,9 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
             ss2 << ".png";
             TString s2 = ss2.str();
             if (xvariables[x] != "")
-                nProfiles(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
+                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
             else
-                nProfiles(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],histcut[y]    ,s2.Data());
+                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],histcut[y]    ,s2.Data());
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
         }
     }

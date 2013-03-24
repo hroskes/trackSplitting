@@ -69,10 +69,12 @@ trackSplitPlot("myFile_wDiffs.root","dxy","phi",kTRUE,kFALSE,kFALSE,3,3,"profile
 
 
 void trackSplitPlot(Char_t *file,Char_t *var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Double_t cut = 3,Char_t *saveas = "")
+                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t normalize = kTRUE,
+                    Double_t cut = 3,Char_t *saveas = "")
 
 Creates a 1D histogram for Delta_var.  If relative = true, the histogram is for Delta_var / var_org.
 If logscale = true, the x axis is on a log scale.
+If normalize = true, the histogram is normalized
 Cut is in terms of standard deviations.
 To save the histogram, put a filename in saveas.
 
@@ -80,54 +82,48 @@ To run:
 
 root -l -n
 .L trackSplitPlot.C+
-trackSplitPlot("myFile_wDiffs.root","dz",kFALSE,kFALSE,3,3,"hist.Delta_dz.png")  //(for example)
+trackSplitPlot("myFile_wDiffs.root","dz",kFALSE,kFALSE,kFALSE,3,3,"hist.Delta_dz.png")  //(for example)
 
 
-================
-nProfiles.C ----
-================
-
-void nProfiles(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
-               Bool_t relative = kFALSE,Bool_t logscale = kFALSE,
-               Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
+void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
+                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,
+                    Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 
 Creates multiple profiles on the same canvas.
 The profiles come from different files, but all use the same variables.
 files and names should be arrays of strings, and their lengths should be nFiles.
 files contains filenames, and names are labels that go in the legend.
-The rest of the parameters are explained in trackSplitPlot.C
+The rest of the parameters are explained the first trackSplitPlot()
 There are enough colors in the list for it to work with nFiles up to 13, but
  long before that it would be impossible to see anything.
-If xvar = "", it runs nProfiles(nFiles,files,names,yvar,relative,logscale,kTRUE,ycut,saveas)
+If xvar = "", it runs trackSplitPlot(nFiles,files,names,yvar,relative,logscale,kTRUE,ycut,saveas)
 
 To run:
 root -l -n
-.L nProfiles.C+
+.L trackSplitPlot.C+
 Char_t *files[3] = {"TrackSplitting_Alignment_Split1_wDiffs.root",
                     "TrackSplitting_Alignment_Split2_wDiffs.root",
                     "TrackSplitting_Alignment_Split3_wDiffs.root"}
 Char_t *names[3] = {"split1","split2","split3"}
-nProfiles(3,files,names,"phi","pt",kFALSE,kFALSE,3,10,"profile.phi_org.Delta_pt.png")  //(for example)
+trackSplitPlot(3,files,names,"phi","pt",kFALSE,kFALSE,3,10,"profile.phi_org.Delta_pt.png")  //(for example)
 
 
 
-void nProfiles(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
-                 Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t normalize = kTRUE,
-                 Double_t cut = 3,Char_t *saveas = "")
+void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
+                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t normalize = kTRUE,
+                    Double_t cut = 3,Char_t *saveas = "")
 
 Creates multiple histograms, like in the second trackSplitPlot(), from multiple files on the same canvas.
-Most of the parameters are explained either in the first nProfiles() or in the second trackSplitPlot().
-If normalize is true, the histograms will all be normalized, which is recommended unless the trees are
- all the same length (eg if they come from the same data with different gemoetries)
+The parameters are all explained in the previous functions
 
 To run:
 root -l -n
-.L nProfiles.C+
+.L trackSplitPlot.C+
 Char_t *files[3] = {"TrackSplitting_Alignment_Split1_wDiffs.root",
                     "TrackSplitting_Alignment_Split2_wDiffs.root",
                     "TrackSplitting_Alignment_Split3_wDiffs.root"}
 Char_t *names[3] = {"split1","split2","split3"}
-nProfiles(3,files,names,"phi",kFALSE,kFALSE,kTRUE,3,"hist.Delta_phi.png")  //(for example)
+trackSplitPlot(3,files,names,"phi",kFALSE,kFALSE,kTRUE,3,"hist.Delta_phi.png")  //(for example)
 
 
 ================
@@ -170,9 +166,8 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
 Like the previous function, but uses multiple files.
 The profiles and histograms are all made together on one canvas.
 If you uncomment the section in the middle, it will also make scatterplots, separately for each file.
- using nProfiles().
 So there will be 56 profiles, 8 histograms, and if you make them, 56*nFiles scatterplots.
-The parameters are all explained either in nProfiles.C or in the previous makePlots() function.
+The parameters are all explained either in trackSplitPlot() or in the previous makePlots() function.
 If you make scatterplots, names[i] are also used in their filenames, so in that case none of them can have spaces.
 
 To run:
