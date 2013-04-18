@@ -56,9 +56,10 @@ xcut determines the minimum and maximum values on the x axis.
 In a plot, ycut does the same on the y axis.  In a profile, ycut determines which events are included,
   but the y axis is set automatically.
 
-If xvar = "", it will run trackSplitPlot(file,yvar,relative,logscale,ycut,saveas)   (see the other trackSplitPlot() below)
+If xvar = "", it instead creates a 1D histogram of Delta_yvar (or Delta_yvar/yvar_org, if relative is true),
+ using ycut as the cut (xcut is ignored).
 
-To save the plot or profile, put a file name in saveas.
+To save the plot, put a file name in saveas.
 
 To run:
 
@@ -89,7 +90,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,
                     Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 
-Creates multiple profiles on the same canvas.
+Creates multiple profiles or histograms on the same canvas.
 The profiles come from different files, but all use the same variables.
 files and names should be arrays of strings, and their lengths should be nFiles.
 files contains filenames, and names are labels that go in the legend.
@@ -114,7 +115,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
                     Double_t cut = 3,Char_t *saveas = "")
 
 Creates multiple histograms, like in the second trackSplitPlot(), from multiple files on the same canvas.
-The parameters are all explained in the previous functions
+The parameters are all explained in the previous functions.
 
 To run:
 root -l -n

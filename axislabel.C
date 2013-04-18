@@ -1,3 +1,5 @@
+enum PlotType {ScatterPlot,Profile,Histogram};
+
 Char_t *fancyname(Char_t *variable)
 {
     if (variable == "pt")
