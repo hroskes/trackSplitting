@@ -142,7 +142,7 @@ Double_t findStdDev(Int_t nFiles,Char_t **files,TString variable,Char_t *relativ
     cout << variable << endl;
     Double_t var,
              rel = 1,
-             average = findAverage(file,variable,relative),
+             average = findAverage(nFiles,files,variable,relative),
              stddevsquared = 0,
              totallength = 0;
     for (Int_t j = 0; j < nFiles; j++)

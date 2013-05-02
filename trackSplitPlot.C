@@ -20,22 +20,13 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     if (nFiles < 1  && xvar != "") type = ScatterPlot;
     if (nFiles < 1) nFiles = 1;
     
-/*
-    if (xvar == "")
-    {
-        Bool_t normalize = kTRUE;
-        trackSplitPlot(nFiles,files,names,yvar,relative,logscale,normalize,ycut,saveas);
-        return;
-    }
-*/
-        
     const Int_t n = nFiles;
     
     if (n > nColors)
     {
         cout << "Doesn't work for more than " << nColors << " files" << endl
              << "If you want to use more files add more colors to Color_t colors in trackSplitPlot.C" <<endl
-             << "But you probably won't be able to make sense of the profiles anyway with so many" << endl;
+             << "But you probably won't be able to make sense of the plots anyway with so many" << endl;
         return;
     }
 
@@ -52,49 +43,47 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
     TH1 *p[n];
 
+    stringstream sx,sy,srel;
+
+    sx << xvar << "_org";
+    TString xvariable = sx.str();
+
+    sy << "Delta_" << yvar;
+    TString yvariable = sy.str();
+    
+    TString relvariable = "1";
+    if (relative)
+    {
+        srel << yvar << "_org";
+        relvariable = srel.str();
+    }
+
+    Double_t xaverage,xstddev,xmin,xmax,yaverage,ystddev,ymin,ymax;
+    if (type == Profile || type == ScatterPlot)
+    {
+        xaverage = findAverage(nFiles,files,xvariable);
+        xstddev  = findStdDev (nFiles,files,xvariable);
+        xmin     = TMath::Max(xaverage - xcut * xstddev,findMin(nFiles,files,xvariable));
+        xmax     = TMath::Min(xaverage + xcut * xstddev,findMax(nFiles,files,xvariable));
+    }
+    yaverage = 0 /*findAverage(nFiles,files,yvariable,relvariable)*/;
+    ystddev  = findStdDev (nFiles,files,yvariable,relvariable);
+    ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut*ystddev,
+                          findMin(nFiles,files,yvariable,relvariable)),
+                          -findMax(nFiles,files,yvariable,relvariable));
+    ymax     = -ymin;
+    if (xvar == "pt")
+        xmin = findMin(nFiles,files,xvariable);
+
     for (Int_t i = 0; i < n; i++)
     {
         TFile *f = new TFile(files[i]);
         TTree *tree = (TTree*)f->Get("splitterTree");
 
-//Set up strings ========================================
-
-        stringstream sx,sy,srel,sid;
-
-        sx << xvar << "_org";
-        TString xvariable = sx.str();
-        
-        sy << "Delta_" << yvar;
-        TString yvariable = sy.str();
-        
-        TString relvariable = "1";
-        if (relative)
-        {
-            srel << yvar << "_org";
-            relvariable = srel.str();
-        }
-
+        stringstream sid;
         sid << "p" << i;
         TString id = sid.str();
 
-
-//=======================================================
-
-        Double_t xaverage,xstddev,xmin,xmax,yaverage,ystddev,ymin,ymax;
-        if (type == Profile || type == ScatterPlot)
-        {
-            xaverage = findAverage(files[i],xvariable);
-            xstddev  = findStdDev (files[i],xvariable);
-            xmin     = TMath::Max(xaverage - xcut * xstddev,findMin(files[i],xvariable));
-            xmax     = TMath::Min(xaverage + xcut * xstddev,findMax(files[i],xvariable));
-        }
-        yaverage = 0 /*findAverage(files[i],yvariable,relvariable)*/;
-        ystddev  = findStdDev (files[i],yvariable,relvariable);
-        ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut*ystddev,findMin(files[i],yvariable,relvariable)),-findMax(files[i],yvariable,relvariable));
-        ymax     = -ymin;
-        if (xvar == "pt")
-            xmin = findMin(files[i],xvariable);
-        
         if (type == Profile)
             p[i] = new TProfile(id,"",25,xmin,xmax);
         if (type == ScatterPlot)
@@ -170,6 +159,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         c1->SetLogy((Bool_t)(logscale));
     if (type == Histogram)
         c1->SetLogx((Bool_t)(logscale));
+
     if (type == ScatterPlot)
         p[0]->Draw("COLZ");
     else

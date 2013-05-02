@@ -4,6 +4,7 @@
 // setTDRStyle()
 //
 #include "TStyle.h"
+#include "axislabel.C"
 
 // tdrGrid: Turns the grid lines on (true) or off (false)
 
@@ -185,4 +186,3 @@ void set_plot_style()
     TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
     gStyle->SetNumberContours(NCont);
 }
-
