@@ -1,6 +1,7 @@
 #include "tdrstyle.C"
 #include "axislabel.C"
 #include "averages.C"
+#include "saveplot.C"
 
 //profile =  true:   profile
 //profile =  false:  scatter plot
@@ -179,7 +180,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
     if (saveas != "")
     {
-        c1->SaveAs(saveas);
+        saveplot(c1,saveas);
     }
 }
 

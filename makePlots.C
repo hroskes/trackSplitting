@@ -20,7 +20,7 @@ void makePlots(Char_t *file,TString directory = "plots",Double_t *xcut = xcutdef
     {
         for (Int_t y = 0; y < ysize; y++)
         {
-            if (false) continue;
+            if (xvariables[x] != "" || yvariables[y] != "theta") continue;
             stringstream ss1,ss2;
             ss1 << directory;
             ss2 << directory;
@@ -43,13 +43,13 @@ void makePlots(Char_t *file,TString directory = "plots",Double_t *xcut = xcutdef
                 ss1 << ".relative";
                 ss2 << ".relative";
             }
-            ss1 << ".png";
-            ss2 << ".png";
+            ss1 << ".pngeps";
+            ss2 << ".pngeps";
             TString s1 = ss1.str();
             TString s2 = ss2.str();
             if (xvariables[x] != "")
             {
-/*//*/              trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],yplotcut[y],   s1.Data());
+//              trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],yplotcut[y],   s1.Data());
                 trackSplitPlot(file,xvariables[x],yvariables[y],kTRUE, relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
             }
             else
@@ -68,7 +68,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
         for (Int_t y = 0; y < ysize; y++)
         {
             if (false) continue;
-///*
+/*
             for (Int_t i = 0; i < nFiles; i++)
             {
                 if (xvariables[x] == "") continue;
@@ -79,11 +79,11 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
                 ss1 << names[i] << "." << xvariables[x] << "_org.Delta_" << yvariables[y];
                 if (relative[y])
                     ss1 << ".relative";
-                ss1 << ".png";
+                ss1 << ".pngeps";
                 TString s1 = ss1.str();
                 trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],yplotcut[y],s1.Data());
             }
-//*/
+*/
             stringstream ss2;
             ss2 << directory;
             if (directory.Last('/') != directory.Length() - 1)
@@ -94,7 +94,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
                 ss2 << "profile." << xvariables[x] << "_org.Delta_" << yvariables[y];
             if (relative[y])
                 ss2 << ".relative";
-            ss2 << ".png";
+            ss2 << ".pngeps";
             TString s2 = ss2.str();
             if (xvariables[x] != "")
                 trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
