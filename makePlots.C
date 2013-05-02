@@ -1,17 +1,17 @@
 #include "trackSplitPlot.C"
 
 const Int_t xsize = 8;
-const Int_t ysize = 8;
+const Int_t ysize = 9;
 
 const Char_t *xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt",""};
 const Double_t xcutdef[xsize]        = {-.03,    2.3,   2.5, 1.8, 10,   3,      3,        0};
 
-const Char_t *yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt"};
-const Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE};
-const Bool_t logscale[ysize]         = {kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE};
-const Double_t yplotcutdef[ysize]    = {.015,   .001,   3,      3,      .25,    3,      3,       3};
-const Double_t yprofilecutdef[ysize] = {3,      3,      3,      3,      3,      3,      3,       3};
-const Double_t histcutdef[ysize]     = {3,      .05,    3,      3,      1,      3,      3,       3};
+const Char_t *yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
+const Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
+const Bool_t logscale[ysize]         = {kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
+const Double_t yplotcutdef[ysize]    = {.015,   .001,   3,      3,      .25,    3,      3,       3,         0};
+const Double_t yprofilecutdef[ysize] = {3,      3,      3,      3,      3,      3,      3,       3,         0};
+const Double_t histcutdef[ysize]     = {3,      .05,    3,      3,      1,      3,      3,       3,         0};
 
 void makePlots(Char_t *file,TString directory = "plots",Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, 
                Double_t *histcut = histcutdef)
@@ -20,40 +20,59 @@ void makePlots(Char_t *file,TString directory = "plots",Double_t *xcut = xcutdef
     {
         for (Int_t y = 0; y < ysize; y++)
         {
-            if (xvariables[x] != "" || yvariables[y] != "theta") continue;
-            stringstream ss1,ss2;
+            if (false) continue;
+            stringstream ss1,ss2,ss3;
             ss1 << directory;
             ss2 << directory;
+            ss3 << directory;
             if (directory.Last('/') != directory.Length() - 1)
             {
                 ss1 << "/";
                 ss2 << "/";
+                ss3 << "/";
             }
-            if (xvariables[x] == "")
+            if (xvariables[x] == "" && yvariables[y] == "")
+                ss1 << "hist.zzz_placeholder";
+            else if (xvariables[x] == "")
             {
                 ss1 << "hist.Delta_" << yvariables[y];
             }
+            else if (yvariables[y] == "")
+            {
+                ss1 << "hist." << yvariables[y] << "_org";
+            }
             else
             {
-                ss1 << "plot."    << xvariables[x] << "_org.Delta_" << yvariables[y];
-                ss2 << "profile." << xvariables[x] << "_org.Delta_" << yvariables[y];
+                ss1 << "plot."       << xvariables[x] << "_org.Delta_" << yvariables[y];
+                ss2 << "profile."    << xvariables[x] << "_org.Delta_" << yvariables[y];
+                ss3 << "resolution." << xvariables[x] << "_org.Delta_" << yvariables[y];
             }
             if (relative[y])
             {
                 ss1 << ".relative";
                 ss2 << ".relative";
+                ss3 << ".relative";
             }
             ss1 << ".pngeps";
             ss2 << ".pngeps";
+            ss3 << ".pngeps";
             TString s1 = ss1.str();
             TString s2 = ss2.str();
-            if (xvariables[x] != "")
+            TString s3 = ss3.str();
+            if (xvariables[x] != "" && yvariables[y] != "")
             {
-//              trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],yplotcut[y],   s1.Data());
-                trackSplitPlot(file,xvariables[x],yvariables[y],kTRUE, relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
+//              trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kFALSE,xcut[x],yplotcut[y],   s1.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+                trackSplitPlot(file,xvariables[x],yvariables[y],kTRUE, relative[y],logscale[y],kFALSE,xcut[x],yprofilecut[y],s2.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+                trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kTRUE, xcut[x],yprofilecut[y],s3.Data());
+                delete gROOT->GetListOfCanvases()->Last();
             }
             else
+            {
                 trackSplitPlot(file,xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],histcut[y],    s1.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+            }
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
         }
     }
@@ -71,7 +90,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
 /*
             for (Int_t i = 0; i < nFiles; i++)
             {
-                if (xvariables[x] == "") continue;
+                if (xvariables[x] == "" || yvariables[y] == "") continue;
                 stringstream ss1;
                 ss1 << directory;
                 if (directory.Last('/') != directory.Length() - 1)
@@ -81,25 +100,51 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
                     ss1 << ".relative";
                 ss1 << ".pngeps";
                 TString s1 = ss1.str();
-                trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],xcut[x],yplotcut[y],s1.Data());
+                trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kFALSE,xcut[x],yplotcut[y],s1.Data());
+                delete gROOT->GetListOfCanvases()->Last();
             }
 */
             stringstream ss2;
+            stringstream ss3;
             ss2 << directory;
+            ss3 << directory;
             if (directory.Last('/') != directory.Length() - 1)
+            {
                 ss2 << "/";
-            if (xvariables[x] == "")
+                ss3 << "/";
+            }
+            if (xvariables[x] == "" && yvariables[y] == "")
+                ss2 << "hist.zzz_placeholder";
+            else if (xvariables[x] == "")
                 ss2 << "hist.Delta_" << yvariables[y];
+            else if (yvariables[y] == "")
+                ss2 << "hist." << xvariables[x] << "_org";
             else
+            {
                 ss2 << "profile." << xvariables[x] << "_org.Delta_" << yvariables[y];
+                ss3 << "resolution." << xvariables[x] << "_org.Delta_" << yvariables[y];
+            }
             if (relative[y])
+            {
                 ss2 << ".relative";
+                ss3 << ".relative";
+            }
             ss2 << ".pngeps";
+            ss3 << ".pngeps";
             TString s2 = ss2.str();
-            if (xvariables[x] != "")
-                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],yprofilecut[y],s2.Data());
+            TString s3 = ss3.str();
+            if (xvariables[x] != "" && yvariables[y] != "")
+            {
+                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,xcut[x],yprofilecut[y],s2.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kTRUE ,xcut[x],yprofilecut[y],s3.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+            }
             else
-                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],xcut[x],histcut[y]    ,s2.Data());
+            {
+                trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,xcut[x],histcut[y]    ,s2.Data());
+                delete gROOT->GetListOfCanvases()->Last();
+            }
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
         }
     }
