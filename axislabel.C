@@ -41,11 +41,7 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
 {
     stringstream s;
     if (resolution && axis == 'y')
-    {
-        s << "Width of ";
-        if (relative)
-            s << "(";
-    }
+        s << "#sigma(";
     if (axis == 'y')
         s << "#Delta";
     s << fancyname(variable);
@@ -53,7 +49,7 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
         s << " / " << fancyname(variable);
     if (relative || axis == 'x')
         s << "_{org}";
-    if (resolution && relative && axis == 'y')
+    if (resolution && axis == 'y')
         s << ")";
     if ((!relative || axis == 'x') && units(variable,axis) != "")
         s << " (" << units(variable,axis) << ")";

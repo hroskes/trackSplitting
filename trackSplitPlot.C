@@ -50,8 +50,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         gStyle->SetPadRightMargin(0.115);
     }
 
-    TH1 *p[n],
-        *q[n];
+    TH1 *p[n];
 
     stringstream sx,sy,srel;
 
@@ -68,7 +67,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         relvariable = srel.str();
     }
 
-    Double_t xaverage,xstddev,xmin,xmax,yaverage,ystddev,ymin,ymax;
+    Double_t xaverage,xstddev,xmin = -1,xmax = 1,yaverage,ystddev,ymin = -1,ymax = 1;
     if (type == Profile || type == ScatterPlot || type == OrgHistogram || type == Resolution)
     {
         xaverage = findAverage(nFiles,files,xvariable);
@@ -76,7 +75,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         xmax     = TMath::Min(xaverage + xcut * xstddev,findMax(nFiles,files,xvariable));
 
         if (xvar == "pt")
-            xmin = findMin(nFiles,files,xvariable);
+            xmin = /*findMin(nFiles,files,xvariable)*/ 5;
         else
             xmin = TMath::Max(xaverage - xcut * xstddev,findMin(nFiles,files,xvariable));
     }
@@ -99,7 +98,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         sid << "p" << i;
         TString id = sid.str();
 
-        if (type == Profile || type == Resolution)
+        if (type == Profile)
             p[i] = new TProfile(id,"",25,xmin,xmax);
         if (type == ScatterPlot)
             p[i] = new TH2F(id,"",1000,xmin,xmax,1000/*00*/,ymin,ymax);
@@ -107,8 +106,20 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             p[i] = new TH1F(id,"",100,ymin,ymax);
         if (type == OrgHistogram)
             p[i] = new TH1F(id,"",100,xmin,xmax);
+        if (type == Resolution)
+        {
+            p[i] = new TH1F(id,"",25,xmin,xmax);
+            TH1F *q[25];
+            for (Int_t j = 0; j < 25; j++)
+            {
+                stringstream sid2;
+                sid2 << "q" << j;
+                TString id2 = sid2.str();
+                q[j] = new TH1F(id2,"",100,ymin,ymax);
+            }
+        }
 
-        Double_t x,y,rel = 1;
+        Double_t x = 0,y = 0,rel = 1;
 
         if (!relative && (yvar == "dz" || yvar == "dxy"))
             rel = 1e-4;                                     //it's in cm but we want it in um, so divide by 1e-4
@@ -132,19 +143,21 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             y /= rel;                                          // if !relative, rel = 1 from before
             if (logscale)
                 y = fabs(y);
-            if (ymin <= y && y <= ymax)
+            if (ymin <= y && y < ymax && xmin <= x && x < xmax)
             {
                 if (type == Histogram)
                     p[i]->Fill(y);
-                if (type == ScatterPlot || type == Profile || type == Resolution)
+                if (type == ScatterPlot || type == Profile)
                     p[i]->Fill(x,y);
+                if (type == Resolution)
+                    q[(p[i]->Fill(x,0)) - 1]->Fill(y);         //get which q[j] by filling p[i] (with nothing), which returns the bin number
                 if (type == OrgHistogram)
                     p[i]->Fill(x);
             }
             if (((j+1)/1000)*1000 == j + 1 || j + 1 == length)
             {
                 cout << j + 1 << "/" << length << ": "; 
-                if (type == Profile || type == ScatterPlot || type == Resolution || type == OrgHistogram)
+                if (type == Profile || type == ScatterPlot || type == Resolution)
                     cout << x << ", " << y << endl;
                 if (type == OrgHistogram)
                     cout << x << endl;
@@ -161,18 +174,11 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
         if (type == Resolution)
         {
-            stringstream sid2;
-            sid << "q" << i;
-            TString id2 = sid2.str();
-
-            q[i] = new TH1F(id2,"",25,xmin,xmax);
-            for (Int_t j = 1; j <= 25; j++)
+            for (Int_t j = 0; j < 25; j++)
             {
-                q[i]->SetBinContent(j,p[i]->GetBinError(j));
-                cout << q[i]->GetBinContent(j) << endl;
+                p[i]->SetBinContent(j+1,q[j]->GetRMS());
+                p[i]->SetBinError  (j+1,q[j]->GetRMSError());
             }
-
-            p[i] = q[i];
         }
 
         setAxisLabels(p[i],type,xvar,yvar,relative);
