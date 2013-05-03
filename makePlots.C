@@ -86,7 +86,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
     {
         for (Int_t y = 0; y < ysize; y++)
         {
-            if (x != 0 && x != 7 || y != 0 && y != 8) continue;
+            if (false) continue;
 /*
             for (Int_t i = 0; i < nFiles; i++)
             {
