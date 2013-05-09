@@ -37,7 +37,7 @@ Char_t *units(Char_t *variable,Char_t axis)
     return "";
 }
 
-TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE)
+TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE, Bool_t pull = kFALSE)
 {
     stringstream s;
     if (resolution && axis == 'y')
@@ -49,22 +49,24 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
         s << " / " << fancyname(variable);
     if (relative || axis == 'x')
         s << "_{org}";
+    if (pull && axis == 'y')
+        s << " / #delta(#Delta" << fancyname(variable) << ")";
     if (resolution && axis == 'y')
         s << ")";
-    if ((!relative || axis == 'x') && units(variable,axis) != "")
+    if (((!relative && !pull) || axis == 'x') && units(variable,axis) != "")
         s << " (" << units(variable,axis) << ")";
     return s.str();
 }
 
-void setAxisLabels(TH1 *p, PlotType type,Char_t *xvar,Char_t *yvar,Bool_t relative)
+void setAxisLabels(TH1 *p, PlotType type,Char_t *xvar,Char_t *yvar,Bool_t relative,Bool_t pull)
 {
     if (type == Histogram)
-        p->SetXTitle(axislabel(yvar,'y',relative));
+        p->SetXTitle(axislabel(yvar,'y',relative,false,pull));
     if (type == ScatterPlot || type == Profile || type == Resolution || type == OrgHistogram)
         p->SetXTitle(axislabel(xvar,'x'));
 
     if (type == ScatterPlot || type == Profile)
-        p->SetYTitle(axislabel(yvar,'y',relative));
+        p->SetYTitle(axislabel(yvar,'y',relative,false,pull));
     if (type == Resolution)
-        p->SetYTitle(axislabel(yvar,'y',relative,true));
+        p->SetYTitle(axislabel(yvar,'y',relative,true,pull));
 }
