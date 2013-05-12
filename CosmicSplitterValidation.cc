@@ -13,7 +13,7 @@
 //
 // Original Author:  Nhan Tran
 //         Created:  Mon Jul 16m 16:56:34 CDT 2007
-// $Id: CosmicSplitterValidation.cc,v 1.12 2011/12/20 15:11:41 mussgill Exp $
+// $Id: CosmicSplitterValidation.cc,v 1.1 2013/03/21 17:17:20 hroskes Exp $
 //
 //
 
@@ -99,6 +99,7 @@ private:
 	// tree
 	TTree* splitterTree_;
 	// tree vars
+        int runNumber_,eventNumber_,luminosityBlock_;
 	// split track variables
 	double dcaX1_spl_, dcaY1_spl_, dcaZ1_spl_;
 	double dcaX2_spl_, dcaY2_spl_, dcaZ2_spl_;
@@ -213,6 +214,7 @@ CosmicSplitterValidation::CosmicSplitterValidation(const edm::ParameterSet& iCon
 	goldenPlusTwoTracksCtr(0),
 	_passesTracksPlusMuonsCuts(0),
 	splitterTree_(0),
+        runNumber_(0), eventNumber_(0), luminosityBlock_(0),
 	dcaX1_spl_(0), dcaY1_spl_(0), dcaZ1_spl_(0),
 	dcaX2_spl_(0), dcaY2_spl_(0), dcaZ2_spl_(0),
 	dxy1_spl_(0), dxy2_spl_(0), ddxy_spl_(0),
@@ -499,6 +501,9 @@ void CosmicSplitterValidation::analyze(const edm::Event& iEvent, const edm::Even
 			nHitsPXF_org_ = nhitinFPIXorg;    
 			
 			// fill tree
+                        runNumber_ = iEvent.id().run();
+                        luminosityBlock_ = iEvent.id().luminosityBlock();
+                        eventNumber_ = iEvent.id().event();
 			// split tracks
 			dcaX1_spl_ = dca1.x(); 
 			dcaY1_spl_ = dca1.y();
@@ -691,6 +696,10 @@ void CosmicSplitterValidation::beginJob()
 	
 	splitterTree_ = tfile->make<TTree>("splitterTree","splitterTree");
 	
+        splitterTree_->Branch("runNumber", &runNumber_, "runNumber/I");
+        splitterTree_->Branch("eventNumber", &eventNumber_, "eventNumber/I");
+        splitterTree_->Branch("luminosityBlock", &luminosityBlock_, "luminosityBlock/I");
+
 	// split track variables
 	splitterTree_->Branch("dcaX1_spl", &dcaX1_spl_, "dcaX1_spl/D");
 	splitterTree_->Branch("dcaY1_spl", &dcaY1_spl_, "dcaY1_spl/D");

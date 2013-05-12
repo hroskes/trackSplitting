@@ -1,170 +1,136 @@
-Double_t findMin(Char_t *file,TString variable,Char_t *relative = "1")
+#include <sstream>
+#include "TString.h"
+#include "TFile.h"
+#include "TTree.h"
+
+enum Statistic {Minimum, Maximum, Average, StdDev};
+
+using namespace std;
+
+Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    TFile *f = new TFile(file);
-    TTree *tree = (TTree*)f->Get("splitterTree");
-    Int_t length = tree->GetEntries();
-    Double_t var,rel = 1,min = 1e100;
-    if (variable == "Delta_dxy" || variable == "Delta_dz")
+    Double_t x,rel=1,sigma1=1,sigma2=1;
+    if (axis == 'x')
+    {
+        sigma1 = 1/sqrt(2);
+        sigma2 = 1/sqrt(2);
+    }
+
+    Double_t totallength = 0;
+    Double_t result = 0;
+    if (what == Minimum) result = 1e100;
+    if (what == Maximum) result = -1e100;
+
+    Double_t average = 0;
+    if (what == StdDev)
+        average = findStatistic(Average,nFiles,files,var,axis,relative,pull);
+
+    stringstream sx,srel,ssigma1,ssigma2;
+
+    if (axis == 'y')
+        sx << "Delta_";
+    sx << var;
+    if (axis == 'x')
+        sx << "_org";
+    TString variable = sx.str();
+
+    TString relvariable = "1";
+    if (relative)
+    {
+        srel << var << "_org";
+        relvariable = srel.str();
+    }
+
+    if (pull)
+    {
+        ssigma1 << var << "1Err_spl";
+        ssigma2 << var << "2Err_spl";
+    }
+    TString sigma1variable = ssigma1.str();
+    TString sigma2variable = ssigma2.str();
+
+    if (!relative && !pull && (variable == "Delta_dxy" || variable == "Delta_dz"))
         rel = 1e-4;                                           //it's in cm but we want um
-    tree->SetBranchAddress(variable,&var);
-    if (relative[0] != '1')
-        tree->SetBranchAddress(relative,&rel);
-    for (Int_t i = 0; i<length; i++)
-    {
-        tree->GetEntry(i);
-        if (var / rel < min)
-            min = var / rel;
-    }
-    f->Close();
-    return min;
-}
 
-Double_t findMax(Char_t *file,TString variable,Char_t *relative = "1")
-{
-    TFile *f = new TFile(file);
-    TTree *tree = (TTree*)f->Get("splitterTree");
-    Int_t length = tree->GetEntries();
-    Double_t var,rel = 1,max = -1e100;
-    if (variable == "Delta_dxy" || variable == "Delta_dz")
-        rel = 1e-4;                                           //it's in cm but we want um
-    tree->SetBranchAddress(variable,&var);
-    if (relative[0] != '1')
-        tree->SetBranchAddress(relative,&rel);
-    for (Int_t i = 0; i<length; i++)
-    {
-        tree->GetEntry(i);
-        if (var / rel > max)
-            max = var / rel;
-    }
-    f->Close();
-    return max;
-}
-
-
-
-Double_t findAverage(Char_t *file,TString variable,Char_t *relative = "1")
-{
-    TFile *f = new TFile(file);
-    TTree *tree = (TTree*)f->Get("splitterTree");
-    Int_t length = tree->GetEntries();
-    Double_t var,rel = 1,average = 0;
-    if (variable == "Delta_dxy" || variable == "Delta_dz")
-        rel = 1e-4;                                           //it's in cm but we want um
-    tree->SetBranchAddress(variable,&var);
-    if (relative[0] != '1')
-        tree->SetBranchAddress(relative,&rel);
-    for (Int_t i = 0; i<length; i++)
-    {
-        tree->GetEntry(i);
-        average += (var / rel) / length;
-    }
-    f->Close();
-    return average;
-}
-
-Double_t findStdDev(Char_t *file,TString variable,Char_t *relative = "1")
-{
-    cout << variable << endl;
-    TFile *f = new TFile(file);
-    TTree *tree = (TTree*)f->Get("splitterTree");
-    Int_t length = tree->GetEntries();
-    Double_t var,
-             rel = 1,
-             average = findAverage(file,variable,relative),
-             stddevsquared = 0;
-    if (variable == "Delta_dxy" || variable == "Delta_dz")
-        rel = 1e-4;                                           //it's in cm but we want um
-    tree->SetBranchAddress(variable,&var);
-    if (relative[0] != '1')
-        tree->SetBranchAddress(relative,&rel);
-    for (Int_t i = 0; i<length; i++)
-    {
-        tree->GetEntry(i);
-        stddevsquared += ((var / rel) - average) * ((var / rel) - average) / length;
-    }
-    cout << TMath::Power(stddevsquared,.5) << endl;
-    f->Close();
-    return TMath::Power(stddevsquared,.5);
-}
-
-
-
-
-Double_t findMin(Int_t nFiles,Char_t **files,TString variable,Char_t *relative = "1")
-{
-    Double_t min = findMin(files[0],variable,relative);
-    for (Int_t i = 1; i < nFiles; i++)
-    {
-        min = TMath::Min(min,findMin(files[i],variable,relative));
-    }
-    return min;
-}
-
-Double_t findMax(Int_t nFiles,Char_t **files,TString variable,Char_t *relative = "1")
-{
-    Double_t max = findMax(files[0],variable,relative);
-    for (Int_t i = 1; i < nFiles; i++)
-    {
-        max = TMath::Max(max,findMax(files[i],variable,relative));
-    }
-    return max;
-}
-
-Double_t findAverage(Int_t nFiles,Char_t **files,TString variable,Char_t *relative = "1")
-{
-    Double_t var,
-             rel = 1,
-             sum = 0,
-             totallength = 0;
     for (Int_t j = 0; j < nFiles; j++)
     {
         TFile *f = new TFile(files[j]);
         TTree *tree = (TTree*)f->Get("splitterTree");
         Int_t length = tree->GetEntries();
         totallength += length;
-        if (variable == "Delta_dxy" || variable == "Delta_dz")
-            rel = 1e-4;                                           //it's in cm but we want um
-        tree->SetBranchAddress(variable,&var);
-        if (relative[0] != '1')
-            tree->SetBranchAddress(relative,&rel);
+
+        tree->SetBranchAddress(variable,&x);
+        if (relative)
+            tree->SetBranchAddress(relvariable,&rel);
+        if (pull)
+        {
+            tree->SetBranchAddress(sigma1variable,&sigma1);
+            tree->SetBranchAddress(sigma2variable,&sigma2);
+        }
+
         for (Int_t i = 0; i<length; i++)
         {
             tree->GetEntry(i);
-            sum += (var / rel);
+            x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
+            if (what == Minimum && x < result)
+                result = x;
+            if (what == Maximum && x > result)
+                result = x;
+            if (what == Average)
+                result += x;
+            if (what == StdDev)
+                result += (x - average) * (x - average);
         }
         f->Close();
     }
-    return sum / totallength;
+    if (what == Average) result /= totallength;
+    if (what == StdDev)  result = sqrt(result / (totallength - 1));
+    return result;
 }
 
-Double_t findStdDev(Int_t nFiles,Char_t **files,TString variable,Char_t *relative = "1")
+Double_t findAverage(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    cout << variable << endl;
-    Double_t var,
-             rel = 1,
-             average = findAverage(nFiles,files,variable,relative),
-             stddevsquared = 0,
-             totallength = 0;
-    for (Int_t j = 0; j < nFiles; j++)
-    {
-        TFile *f = new TFile(files[j]);
-        TTree *tree = (TTree*)f->Get("splitterTree");
-        Int_t length = tree->GetEntries();
-        totallength += length;
-        if (variable == "Delta_dxy" || variable == "Delta_dz")
-            rel = 1e-4;                                           //it's in cm but we want um
-        tree->SetBranchAddress(variable,&var);
-        if (relative[0] != '1')
-            tree->SetBranchAddress(relative,&rel);
-        for (Int_t i = 0; i<length; i++)
-        {
-            tree->GetEntry(i);
-            stddevsquared += ((var / rel) - average) ** 2;
-        }
-    }
-    stddevsquared /= totallength;
-    cout << sqrt(stddevsquared) << endl;
-    f->Close();
-    return sqrt(stddevsquared);
+    return findStatistic(Average,nFiles,files,var,axis,relative,pull);
 }
 
+Double_t findMin(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(Minimum,nFiles,files,var,axis,relative,pull);
+}
+
+Double_t findMax(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(Maximum,nFiles,files,var,axis,relative,pull);
+}
+
+Double_t findStdDev(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(StdDev,nFiles,files,var,axis,relative,pull);
+}
+
+
+
+Double_t findStatistic(Statistic what,Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(what,1,&file,var,axis,relative,pull);
+}
+
+Double_t findAverage(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(Average,file,var,axis,relative,pull);
+}
+
+Double_t findMin(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(Minimum,file,var,axis,relative,pull);
+}
+
+Double_t findMax(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(Maximum,file,var,axis,relative,pull);
+}
+
+Double_t findStdDev(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+{
+    return findStatistic(StdDev,file,var,axis,relative,pull);
+}

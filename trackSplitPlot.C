@@ -1,6 +1,6 @@
 #include "tdrstyle.C"
 #include "axislabel.C"
-#include "newaverages.C"
+#include "averages.C"
 
 //profile =  true:   profile
 //profile =  false:  scatter plot
@@ -137,7 +137,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         }
 
         Double_t x = 0, y = 0,
-                 rel = 1, sigma1 = 1/sqrt(2), sigma2 = 1/sqrt(2);
+                 rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
 
         if (!relative && !pull && (yvar == "dz" || yvar == "dxy"))
             rel = 1e-4;                                     //it's in cm but we want it in um, so divide by 1e-4
@@ -164,7 +164,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
                 rel = x;
             }
             y /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));        //  If !relative, rel == 1 from before
-                                                                         //  If !pull, sigma1 = sigma2 = 1/sqrt(2) from before, so sqrt(sigma1^2+sigma2^2) = 1
+                                                                         //  If !pull, we want to divide by sqrt(2) because we want the error from 1 track
             if (logscale)
                 y = fabs(y);
             if (ymin <= y && y < ymax && xmin <= x && x < xmax)
@@ -203,8 +203,8 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         {
             for (Int_t j = 0; j < nBinsProfileResolution; j++)
             {
-                p[i]->SetBinContent(j+1,q[j]->GetRMS()/sqrt(2));
-                p[i]->SetBinError  (j+1,q[j]->GetRMSError()/sqrt(2));
+                p[i]->SetBinContent(j+1,q[j]->GetRMS());
+                p[i]->SetBinError  (j+1,q[j]->GetRMSError());
             }
         }
 
