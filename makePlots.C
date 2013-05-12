@@ -109,7 +109,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if ( pull || x != 0 || (y != 0 && y != 5)) continue;
+                if (false) continue;
                 if (pull)
                 {
                     Double_t plottemp    = yplotcut[y];
