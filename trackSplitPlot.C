@@ -11,21 +11,24 @@ const Int_t nColors = 13;
 const Color_t colors[nColors] = {kRed,kBlue,kGreen,kMagenta,kCyan,kYellow,kBlack,
                                  kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
 
-const Double_t nBinsScatterPlotx = 1000;
-const Double_t nBinsScatterPloty = 1000;
-const Double_t nBinsHistogram = 100;
-const Double_t nBinsProfileResolution = 8;
+const Double_t maxBinsScatterPlotx = 1000;
+const Double_t maxBinsScatterPloty = 1000;
+const Double_t maxBinsHistogram = 100;
+const Double_t maxBinsProfileResolution = 25;
+      Double_t    binsProfileResolution = 8;     //for everything but runNumber
 
 void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                     Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 {
     cout << xvar << " " << yvar << endl;
-    if ((xvar == "" && yvar == "") || (relative && pull))
+    if (relative && pull)
     {
         placeholder(saveas);
         return;
     }
+    if (xvar == "" && yvar == "")
+        return;
 
     PlotType type;
     if (xvar == "")      type = Histogram;
@@ -34,7 +37,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     else if (nFiles < 1) type = ScatterPlot;
     else                 type = Profile;
     if (nFiles < 1) nFiles = 1;
-    
+
     const Int_t n = nFiles;
     
     if (n > nColors)
@@ -56,12 +59,23 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         gStyle->SetPadRightMargin(0.115);
     }
 
+    Double_t nBinsScatterPlotx = maxBinsScatterPlotx;
+    Double_t nBinsScatterPloty = maxBinsScatterPloty;
+    Double_t nBinsHistogram = maxBinsHistogram;
+    Double_t nBinsProfileResolution = binsProfileResolution;
+    if (xvar == "runNumber")
+    {
+        nBinsProfileResolution = maxBinsProfileResolution;
+        nBinsHistogram = maxBinsProfileResolution;
+    }
+
     TH1 *p[n];
 
     stringstream sx,sy,srel,ssigma1,ssigma2;
 
     sx << xvar << "_org";
     TString xvariable = sx.str();
+    if (xvar == "runNumber") xvariable = "runNumber";
 
     sy << "Delta_" << yvar;
     TString yvariable = sy.str();
@@ -95,6 +109,11 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             xmin = /*findMin(nFiles,files,xvar,'x')*/ 5;
             xmax = 100;
         }
+        else if (xvar == "runNumber")
+        {
+            xmin = findMin(nFiles,files,xvar,'x');
+            xmax = findMax(nFiles,files,xvar,'x');
+        }
         else
             xmin = TMath::Max(xaverage - xcut * xstddev,findMin(nFiles,files,xvar,'x'));
     }
@@ -126,7 +145,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         if (type == Resolution || type == Profile)
         {
             p[i] = new TH1F(id,"",nBinsProfileResolution,xmin,xmax);
-            TH1F *q[nBinsProfileResolution];
+            TH1F *q[maxBinsProfileResolution];
             for (Int_t j = 0; j < nBinsProfileResolution; j++)
             {
                 stringstream sid2;
@@ -136,14 +155,19 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             }
         }
 
-        Double_t x = 0, y = 0,
-                 rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+        Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+        Int_t xint = 0;
 
         if (!relative && !pull && (yvar == "dz" || yvar == "dxy"))
             rel = 1e-4;                                     //it's in cm but we want it in um, so divide by 1e-4
 
         if (type == Profile || type == ScatterPlot || type == Resolution || type == OrgHistogram)
-            tree->SetBranchAddress(xvariable,&x);
+        {
+            if (xvar == "runNumber")
+                tree->SetBranchAddress(xvariable,&xint);
+            else
+                tree->SetBranchAddress(xvariable,&x);
+        }
         if (type == Profile || type == ScatterPlot || type == Resolution || type == Histogram)
             tree->SetBranchAddress(yvariable,&y);
         if (relative && xvar != yvar)                       //if xvar == yvar, setting the branch here will undo setting it to x 2 lines earlier
@@ -159,6 +183,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         for (Int_t j = 0; j<length; j++)
         {
             tree->GetEntry(j);
+            if (xvar == "runNumber") x = xint;
             if (relative && xvar == yvar)
             {
                 rel = x;
@@ -214,6 +239,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             {
                 p[i]->SetBinContent(j+1,q[j]->GetMean());
                 p[i]->SetBinError  (j+1,q[j]->GetMeanError());
+                delete q[j];
             }
         }
 
@@ -245,12 +271,24 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         for (Int_t i = 0; i < n; i++)
         {
             g[i] = new TGraphErrors(p[i]);
+            for (Int_t j = 0; j < g[i]->GetN(); j++)
+            {
+                if (g[i]->GetY()[j] == 0)
+                {
+                    g[i]->RemovePoint(j);
+                    j--;
+                }
+            }
             list->Add(g[i]);
         }
         list->Draw("AP");
         Double_t yaxismax = list->GetYaxis()->GetXmax();
         Double_t yaxismin = list->GetYaxis()->GetXmin();
-        if (yaxismin > 0) yaxismin = 0;
+        if (yaxismin > 0)
+        {
+            yaxismax += yaxismin;
+            yaxismin = 0;
+        }
         p[0]->GetYaxis()->SetRangeUser(yaxismin,yaxismax);
         p[0]->Draw("P");
     }
@@ -353,18 +391,22 @@ void saveplot(TCanvas *c1,Char_t *saveas)
     if (saveas == "")
         return;
     TString saveas2 = saveas,
-            saveas3 = saveas;
-    saveas2.ReplaceAll(".pngeps","");
-    saveas3.Remove(saveas3.Length()-7);
+            saveas3 = saveas,
+            saveas4;
+    saveas2.ReplaceAll(".pngepsroot","");
+    saveas3.Remove(saveas3.Length()-11);
     if (saveas2 == saveas3)
     {
-        stringstream s1,s2;
+        stringstream s1,s2,s3;
         s1 << saveas2 << ".png";
         s2 << saveas2 << ".eps";
+        s3 << saveas2 << ".root";
         saveas2 = s1.str();
         saveas3 = s2.str();
+        saveas4 = s3.str();
         c1->SaveAs(saveas2);
         c1->SaveAs(saveas3);
+        c1->SaveAs(saveas4);
         return;
     }
     else

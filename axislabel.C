@@ -17,6 +17,8 @@ Char_t *fancyname(Char_t *variable)
         return "#theta";
     else if (variable == "qoverpt")
         return "(q/p_{T})";
+    else if (variable == "runNumber")
+        return "run number";
     else
         return variable;
 }
@@ -47,7 +49,7 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
     s << fancyname(variable);
     if (relative && axis == 'y')
         s << " / " << fancyname(variable);
-    if (relative || axis == 'x')
+    if (relative || (axis == 'x' && variable != "runNumber"))
         s << "_{org}";
     if (pull && axis == 'y')
         s << " / #delta(#Delta" << fancyname(variable) << ")";

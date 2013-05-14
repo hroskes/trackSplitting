@@ -9,7 +9,9 @@ using namespace std;
 
 Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    Double_t x,rel=1,sigma1=1,sigma2=1;
+    Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+    Int_t xint = 0;
+
     if (axis == 'x')
     {
         sigma1 = 1/sqrt(2);
@@ -30,7 +32,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
     if (axis == 'y')
         sx << "Delta_";
     sx << var;
-    if (axis == 'x')
+    if (axis == 'x' && var != "runNumber")
         sx << "_org";
     TString variable = sx.str();
 
@@ -59,7 +61,11 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
         Int_t length = tree->GetEntries();
         totallength += length;
 
-        tree->SetBranchAddress(variable,&x);
+        if (var == "runNumber")
+            tree->SetBranchAddress(variable,&xint);
+        else
+            tree->SetBranchAddress(variable,&x);
+
         if (relative)
             tree->SetBranchAddress(relvariable,&rel);
         if (pull)
@@ -71,6 +77,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
         for (Int_t i = 0; i<length; i++)
         {
             tree->GetEntry(i);
+            if (var == "runNumber") x = xint;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
                 result = x;
