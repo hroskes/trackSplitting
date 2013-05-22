@@ -10,7 +10,7 @@ using namespace std;
 Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
-    Int_t xint = 0;
+    Int_t xint = 0, xint2 = 0;                                 //xint is for integer variables like runNumber and nHits.  xint2 is for nHits.
 
     if (axis == 'x')
     {
@@ -32,9 +32,13 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
     if (axis == 'y')
         sx << "Delta_";
     sx << var;
-    if (axis == 'x' && var != "runNumber")
+    if (axis == 'x' && var != "runNumber" && var != "nHits")
         sx << "_org";
-    TString variable = sx.str();
+    if (axis == 'x' && var == "nHits")
+        sx << "1_spl";
+    TString variable = sx.str(),
+            variable2 = variable;
+    variable2.ReplaceAll("1","2");
 
     TString relvariable = "1";
     if (relative)
@@ -63,6 +67,11 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
 
         if (var == "runNumber")
             tree->SetBranchAddress(variable,&xint);
+        else if (var == "nHits")
+        {
+            tree->SetBranchAddress(variable,&xint);
+            tree->SetBranchAddress(variable2,&xint2);
+        }
         else
             tree->SetBranchAddress(variable,&x);
 
@@ -77,7 +86,8 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
         for (Int_t i = 0; i<length; i++)
         {
             tree->GetEntry(i);
-            if (var == "runNumber") x = xint;
+            if (var == "runNumber" || var == "nHits")
+                x = xint;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
                 result = x;
@@ -87,9 +97,23 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
                 result += x;
             if (what == StdDev)
                 result += (x - average) * (x - average);
+            if (var == "nHits")
+            {
+                x = xint2;
+                x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
+                if (what == Minimum && x < result)
+                    result = x;
+                if (what == Maximum && x > result)
+                    result = x;
+                if (what == Average)
+                    result += x;
+                if (what == StdDev)
+                    result += (x - average) * (x - average);
+            }
         }
         f->Close();
     }
+    if (var == "nHits") totallength *= 2;
     if (what == Average) result /= totallength;
     if (what == StdDev)  result = sqrt(result / (totallength - 1));
     return result;

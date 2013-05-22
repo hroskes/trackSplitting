@@ -68,6 +68,12 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         nBinsProfileResolution = maxBinsProfileResolution;
         nBinsHistogram = maxBinsProfileResolution;
     }
+    if (xvar == "nHits")
+    {
+        nBinsHistogram = (int)(findMax(nFiles,files,xvar,'x') - findMin(nFiles,files,xvar,'x') + 1.1);     //in case it's .99999
+        nBinsScatterPlotx = nBinsHistogram;
+        nBinsProfileResolution = nBinsHistogram;
+    }
 
     TH1 *p[n];
 
@@ -75,7 +81,13 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
     sx << xvar << "_org";
     TString xvariable = sx.str();
+    TString xvariable2 = "";
     if (xvar == "runNumber") xvariable = "runNumber";
+    if (xvar == "nHits")
+    {
+        xvariable = "nHits1_spl";
+        xvariable2 = "nHits2_spl";
+    }
 
     sy << "Delta_" << yvar;
     TString yvariable = sy.str();
@@ -106,13 +118,13 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
         if (xvar == "pt")
         {
-            xmin = /*findMin(nFiles,files,xvar,'x')*/ 5;
+            xmin = 5;
             xmax = 100;
         }
-        else if (xvar == "runNumber")
+        else if (xvar == "runNumber" || xvar == "nHits")
         {
-            xmin = findMin(nFiles,files,xvar,'x');
-            xmax = findMax(nFiles,files,xvar,'x');
+            xmin = findMin(nFiles,files,xvar,'x') - .5;
+            xmax = findMax(nFiles,files,xvar,'x') + .5;
         }
         else
             xmin = TMath::Max(xaverage - xcut * xstddev,findMin(nFiles,files,xvar,'x'));
@@ -137,7 +149,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         TString id = sid.str();
 
         if (type == ScatterPlot)
-            p[i] = new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPlotx,ymin,ymax);
+            p[i] = new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPloty,ymin,ymax);
         if (type == Histogram)
             p[i] = new TH1F(id,"",nBinsHistogram,ymin,ymax);
         if (type == OrgHistogram)
@@ -155,8 +167,8 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             }
         }
 
-        Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
-        Int_t xint = 0;
+        Double_t x = 0, x2 = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+        Int_t xint = 0, xint2 = 0;
 
         if (!relative && !pull && (yvar == "dz" || yvar == "dxy"))
             rel = 1e-4;                                     //it's in cm but we want it in um, so divide by 1e-4
@@ -165,6 +177,11 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         {
             if (xvar == "runNumber")
                 tree->SetBranchAddress(xvariable,&xint);
+            else if (xvar == "nHits")
+            {
+                tree->SetBranchAddress(xvariable,&xint);
+                tree->SetBranchAddress(xvariable2,&xint2);
+            }
             else
                 tree->SetBranchAddress(xvariable,&x);
         }
@@ -183,7 +200,8 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
         for (Int_t j = 0; j<length; j++)
         {
             tree->GetEntry(j);
-            if (xvar == "runNumber") x = xint;
+            if (xvar == "runNumber" || xvar == "nHits")
+                x = xint;
             if (relative && xvar == yvar)
             {
                 rel = x;
@@ -206,6 +224,26 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
                 if (type == OrgHistogram)
                     p[i]->Fill(x);
             }
+
+            if (xvar == "nHits")
+            {
+                x = xint2;
+                if (ymin <= y && y < ymax && xmin <= x && x < xmax)
+                {
+                    if (type == Histogram)
+                        p[i]->Fill(y);
+                    if (type == ScatterPlot)
+                        p[i]->Fill(x,y);
+                    if (type == Resolution || type == Profile)
+                    {
+                        int which = (p[i]->Fill(x,0)) - 1;
+                        if (which >= 0) q[which]->Fill(y);         //get which q[j] by filling p[i] (with nothing), which returns the bin number
+                    }
+                    if (type == OrgHistogram)
+                        p[i]->Fill(x);
+                }
+            }
+
             if (((j+1)/1000)*1000 == j + 1 || j + 1 == length)
             {
                 cout << j + 1 << "/" << length << ": "; 
@@ -245,14 +283,11 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
 
         setAxisLabels(p[i],type,xvar,yvar,relative,pull);
 
-        if (n>=2)
+        p[i]->SetLineColor(colors[i]);
+        if (type == Resolution || type == Profile)
         {
-            p[i]->SetLineColor(colors[i]);
-            if (type == Resolution || type == Profile)
-            {
-                p[i]->SetMarkerColor(colors[i]);
-                p[i]->SetMarkerStyle(20+i);
-            }
+            p[i]->SetMarkerColor(colors[i]);
+            p[i]->SetMarkerStyle(20+i);
         }
     }
 

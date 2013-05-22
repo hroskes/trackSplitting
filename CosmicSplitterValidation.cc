@@ -13,7 +13,7 @@
 //
 // Original Author:  Nhan Tran
 //         Created:  Mon Jul 16m 16:56:34 CDT 2007
-// $Id: CosmicSplitterValidation.cc,v 1.1 2013/03/21 17:17:20 hroskes Exp $
+// $Id: CosmicSplitterValidation.cc,v 1.2 2013/05/12 19:16:40 hroskes Exp $
 //
 //
 
@@ -111,10 +111,10 @@ private:
 	double pt1_spl_, pt2_spl_, dpt_spl_;
         double p1_spl_, p2_spl_, dp_spl_;
         double qoverpt1_spl_, qoverpt2_spl_, dqoverpt_spl_;
-        double nHits1_spl_, nHitsPXB1_spl_, nHitsPXF1_spl_, nHitsTIB1_spl_;
-        double nHitsTOB1_spl_, nHitsTID1_spl_, nHitsTEC1_spl_;
-        double nHits2_spl_, nHitsPXB2_spl_, nHitsPXF2_spl_, nHitsTIB2_spl_;
-        double nHitsTOB2_spl_, nHitsTID2_spl_, nHitsTEC2_spl_;
+        int    nHits1_spl_, nHitsPXB1_spl_, nHitsPXF1_spl_, nHitsTIB1_spl_;
+        int    nHitsTOB1_spl_, nHitsTID1_spl_, nHitsTEC1_spl_;
+        int    nHits2_spl_, nHitsPXB2_spl_, nHitsPXF2_spl_, nHitsTIB2_spl_;
+        int    nHitsTOB2_spl_, nHitsTID2_spl_, nHitsTEC2_spl_;
 	// spl_it track errors
         double dxy1Err_spl_, dxy2Err_spl_;
 	double dz1Err_spl_, dz2Err_spl_;
@@ -130,8 +130,8 @@ private:
 	double theta_org_, eta_org_, phi_org_;
         double pt_org_, p_org_, qoverpt_org_;
 	double norchi2_org_;
-        double nHits_org_, nHitsPXB_org_, nHitsPXF_org_, nHitsTIB_org_;
-        double nHitsTOB_org_, nHitsTID_org_, nHitsTEC_org_;
+        int    nHits_org_, nHitsPXB_org_, nHitsPXF_org_, nHitsTIB_org_;
+        int    nHitsTOB_org_, nHitsTID_org_, nHitsTEC_org_;
         // original track errors
         double dxyErr_org_, dzErr_org_;
         double thetaErr_org_, etaErr_org_, phiErr_org_;
@@ -388,13 +388,13 @@ void CosmicSplitterValidation::analyze(const edm::Event& iEvent, const edm::Even
 			math::XYZPoint dca2 = track2.referencePoint();
 			
 			// looping through the hits for track 1
-			double Nrechits1 =0;
-			double nhitinTIB1 =0; 
-			double nhitinTOB1 =0; 
-			double nhitinTID1 =0; 
-			double nhitinTEC1 =0; 
-			double nhitinBPIX1 =0;
-			double nhitinFPIX1 =0;    
+			int Nrechits1 =0;
+			int nhitinTIB1 =0; 
+			int nhitinTOB1 =0; 
+			int nhitinTID1 =0; 
+			int nhitinTEC1 =0; 
+			int nhitinBPIX1 =0;
+			int nhitinFPIX1 =0;    
 			for (trackingRecHit_iterator iHit = track1.recHitsBegin(); iHit != track1.recHitsEnd(); ++iHit) {
 				
 				if((*iHit)->isValid()) {       
@@ -421,13 +421,13 @@ void CosmicSplitterValidation::analyze(const edm::Event& iEvent, const edm::Even
 			nHitsPXF1_spl_ = nhitinFPIX1;  
 			
 			// looping through the hits for track 2
-			double Nrechits2 =0;
-			double nhitinTIB2 =0; 
-			double nhitinTOB2 =0; 
-			double nhitinTID2 =0; 
-			double nhitinTEC2 =0; 
-			double nhitinBPIX2 =0;
-			double nhitinFPIX2 =0;    
+			int Nrechits2 =0;
+			int nhitinTIB2 =0; 
+			int nhitinTOB2 =0; 
+			int nhitinTID2 =0; 
+			int nhitinTEC2 =0; 
+			int nhitinBPIX2 =0;
+			int nhitinFPIX2 =0;    
 			for (trackingRecHit_iterator iHit = track2.recHitsBegin(); iHit != track2.recHitsEnd(); ++iHit) {
 				
 				if((*iHit)->isValid()) {       
@@ -468,13 +468,13 @@ void CosmicSplitterValidation::analyze(const edm::Event& iEvent, const edm::Even
 			math::XYZPoint dca_org = origTrack.referencePoint();
 			
 			// looping through the hits for the original track
-			double Nrechitsorg =0;
-			double nhitinTIBorg =0; 
-			double nhitinTOBorg =0; 
-			double nhitinTIDorg =0; 
-			double nhitinTECorg =0; 
-			double nhitinBPIXorg =0;
-			double nhitinFPIXorg =0;    
+			int Nrechitsorg =0;
+			int nhitinTIBorg =0; 
+			int nhitinTOBorg =0; 
+			int nhitinTIDorg =0; 
+			int nhitinTECorg =0; 
+			int nhitinBPIXorg =0;
+			int nhitinFPIXorg =0;    
 			for (trackingRecHit_iterator iHit = origTrack.recHitsBegin(); iHit != origTrack.recHitsEnd(); ++iHit) {
 				
 				if((*iHit)->isValid()) {       
@@ -730,20 +730,20 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("qoverpt1_spl", &qoverpt1_spl_, "qoverpt1_spl/D");
 	splitterTree_->Branch("qoverpt2_spl", &qoverpt2_spl_, "qoverpt2_spl/D");
 	splitterTree_->Branch("dqoverpt_spl", &dqoverpt_spl_, "dqoverpt_spl/D");
-	splitterTree_->Branch("nHits1_spl", &nHits1_spl_, "nHits1_spl/D");
-	splitterTree_->Branch("nHitsPXB1_spl", &nHitsPXB1_spl_, "nHitsPXB1_spl/D");
-	splitterTree_->Branch("nHitsPXF1_spl", &nHitsPXF1_spl_, "nHitsPXF1_spl/D");
-	splitterTree_->Branch("nHitsTIB1_spl", &nHitsTIB1_spl_, "nHitsTIB1_spl/D");
-	splitterTree_->Branch("nHitsTOB1_spl", &nHitsTOB1_spl_, "nHitsTOB1_spl/D");
-	splitterTree_->Branch("nHitsTID1_spl", &nHitsTID1_spl_, "nHitsTID1_spl/D");
-	splitterTree_->Branch("nHitsTEC1_spl", &nHitsTEC1_spl_, "nHitsTEC1_spl/D");
-	splitterTree_->Branch("nHits2_spl", &nHits2_spl_, "nHits2_spl/D");
-	splitterTree_->Branch("nHitsPXB2_spl", &nHitsPXB2_spl_, "nHitsPXB2_spl/D");
-	splitterTree_->Branch("nHitsPXF2_spl", &nHitsPXF2_spl_, "nHitsPXF2_spl/D");
-	splitterTree_->Branch("nHitsTIB2_spl", &nHitsTIB2_spl_, "nHitsTIB2_spl/D");
-	splitterTree_->Branch("nHitsTOB2_spl", &nHitsTOB2_spl_, "nHitsTOB2_spl/D");
-	splitterTree_->Branch("nHitsTID2_spl", &nHitsTID2_spl_, "nHitsTID2_spl/D");
-	splitterTree_->Branch("nHitsTEC2_spl", &nHitsTEC2_spl_, "nHitsTEC2_spl/D");
+	splitterTree_->Branch("nHits1_spl", &nHits1_spl_, "nHits1_spl/I");
+	splitterTree_->Branch("nHitsPXB1_spl", &nHitsPXB1_spl_, "nHitsPXB1_spl/I");
+	splitterTree_->Branch("nHitsPXF1_spl", &nHitsPXF1_spl_, "nHitsPXF1_spl/I");
+	splitterTree_->Branch("nHitsTIB1_spl", &nHitsTIB1_spl_, "nHitsTIB1_spl/I");
+	splitterTree_->Branch("nHitsTOB1_spl", &nHitsTOB1_spl_, "nHitsTOB1_spl/I");
+	splitterTree_->Branch("nHitsTID1_spl", &nHitsTID1_spl_, "nHitsTID1_spl/I");
+	splitterTree_->Branch("nHitsTEC1_spl", &nHitsTEC1_spl_, "nHitsTEC1_spl/I");
+	splitterTree_->Branch("nHits2_spl", &nHits2_spl_, "nHits2_spl/I");
+	splitterTree_->Branch("nHitsPXB2_spl", &nHitsPXB2_spl_, "nHitsPXB2_spl/I");
+	splitterTree_->Branch("nHitsPXF2_spl", &nHitsPXF2_spl_, "nHitsPXF2_spl/I");
+	splitterTree_->Branch("nHitsTIB2_spl", &nHitsTIB2_spl_, "nHitsTIB2_spl/I");
+	splitterTree_->Branch("nHitsTOB2_spl", &nHitsTOB2_spl_, "nHitsTOB2_spl/I");
+	splitterTree_->Branch("nHitsTID2_spl", &nHitsTID2_spl_, "nHitsTID2_spl/I");
+	splitterTree_->Branch("nHitsTEC2_spl", &nHitsTEC2_spl_, "nHitsTEC2_spl/I");
 	
 	
 	splitterTree_->Branch("dxy1Err_spl", &dxy1Err_spl_, "dxy1Err_spl/D");
@@ -774,13 +774,13 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("qoverpt_org", &qoverpt_org_, "qoverpt_org/D");
 	splitterTree_->Branch("norchi2_org", &norchi2_org_, "norchi2_org/D");
 	
-	splitterTree_->Branch("nHits_org", &nHits_org_, "nHits_org/D");
-	splitterTree_->Branch("nHitsPXB_org", &nHitsPXB_org_, "nHitsPXB_org/D");
-	splitterTree_->Branch("nHitsPXF_org", &nHitsPXF_org_, "nHitsPXF_org/D");
-	splitterTree_->Branch("nHitsTIB_org", &nHitsTIB_org_, "nHitsTIB_org/D");
-	splitterTree_->Branch("nHitsTOB_org", &nHitsTOB_org_, "nHitsTOB_org/D");
-	splitterTree_->Branch("nHitsTID_org", &nHitsTID_org_, "nHitsTID_org/D");
-	splitterTree_->Branch("nHitsTEC_org", &nHitsTEC_org_, "nHitsTEC_org/D");
+	splitterTree_->Branch("nHits_org", &nHits_org_, "nHits_org/I");
+	splitterTree_->Branch("nHitsPXB_org", &nHitsPXB_org_, "nHitsPXB_org/I");
+	splitterTree_->Branch("nHitsPXF_org", &nHitsPXF_org_, "nHitsPXF_org/I");
+	splitterTree_->Branch("nHitsTIB_org", &nHitsTIB_org_, "nHitsTIB_org/I");
+	splitterTree_->Branch("nHitsTOB_org", &nHitsTOB_org_, "nHitsTOB_org/I");
+	splitterTree_->Branch("nHitsTID_org", &nHitsTID_org_, "nHitsTID_org/I");
+	splitterTree_->Branch("nHitsTEC_org", &nHitsTEC_org_, "nHitsTEC_org/I");
 
 	splitterTree_->Branch("dxyErr_org", &dxyErr_org_, "dxyErr_org/D");
 	splitterTree_->Branch("dzErr_org", &dzErr_org_, "dzErr_org/D");

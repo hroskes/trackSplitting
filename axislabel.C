@@ -49,7 +49,7 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
     s << fancyname(variable);
     if (relative && axis == 'y')
         s << " / " << fancyname(variable);
-    if (relative || (axis == 'x' && variable != "runNumber"))
+    if (relative || (axis == 'x' && variable != "runNumber" && variable != "nHits"))
         s << "_{org}";
     if (pull && axis == 'y')
         s << " / #delta(#Delta" << fancyname(variable) << ")";

@@ -1,10 +1,10 @@
 #include "trackSplitPlot.C"
 
-const Int_t xsize = 9;
+const Int_t xsize = 10;
 const Int_t ysize = 9;
 
-const Char_t *xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber",""};
-const Double_t xcutdef[xsize]        = {-.03, 2.3,   2.5,   1.8,  10,   3,      3,        0,          0};
+const Char_t *xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
+const Double_t xcutdef[xsize]        = {-.03, 2.3,   2.5,   1.8,  10,   3,      3,        0,          0,      0};
 
 const Char_t *yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
 const Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
@@ -115,7 +115,13 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if (x != 7) continue;
+                if ((x != 9 || y != 8) && x != 8) continue;
+
+                if (x == 9 && y == 8)
+                {
+                    if (!pull) placeholders(directory);
+                    continue;
+                }
                 if (pull)
                 {
                     Double_t plottemp    = yplotcut[y];
@@ -150,7 +156,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
                 if (pull) pullstring = "pull.";
 
                 TString xvarstring = xvariables[x];
-                if (xvariables[x] != "runNumber" && xvariables[x] != "") xvarstring.Append("_org");
+                if (xvariables[x] != "runNumber" && xvariables[x] != "nHits" && xvariables[x] != "") xvarstring.Append("_org");
                 if (xvariables[x] != "" && yvariables[y] != "") xvarstring.Append(".");
 
                 TString yvarstring = yvariables[y];
@@ -202,4 +208,16 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
         }
     }
+}
+
+void placeholders(TString directory)
+{
+    TString filename = "orghist.z_placeholder1.pngepsroot";
+    Char_t *slashstring = "";
+    if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
+    filename.Prepend(slashstring);
+    filename.Prepend(directory);
+    placeholder(filename);
+    placeholder(filename.ReplaceAll("placeholder1","placeholder2"));
+    placeholder(filename.ReplaceAll("placeholder2","placeholder3"));
 }
