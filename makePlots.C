@@ -115,7 +115,7 @@ void makePlots(Int_t nFiles,Char_t **files,Char_t **names,TString directory = "p
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if ((x != 9 || y != 8) && x != 8) continue;
+                if (y + ysize * x + 1 <= 73) continue;
 
                 if (x == 9 && y == 8)
                 {

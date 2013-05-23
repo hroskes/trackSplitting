@@ -1,6 +1,7 @@
 #include "tdrstyle.C"
 #include "axislabel.C"
 #include "averages.C"
+#include "placeLegend.C"
 
 //profile =  true:   profile
 //profile =  false:  scatter plot
@@ -17,7 +18,7 @@ const Double_t maxBinsHistogram = 100;
 const Double_t maxBinsProfileResolution = 25;
       Double_t    binsProfileResolution = 8;     //for everything but runNumber
 
-void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
+TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                     Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 {
@@ -289,6 +290,10 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
             p[i]->SetMarkerColor(colors[i]);
             p[i]->SetMarkerStyle(20+i);
         }
+        else
+        {
+            p[i]->SetMarkerStyle(1);
+        }
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
@@ -297,6 +302,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     if (type == Histogram)
         c1->SetLogx((Bool_t)(logscale));
 
+    TH1F *maxp = p[0];
     if (type == ScatterPlot)
         p[0]->Draw("COLZ");
     else if (type == Resolution || type == Profile)
@@ -329,7 +335,7 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     }
     else if (type == Histogram || type == OrgHistogram)
     {
-        TH1F *maxp = (TH1F*)p[0]->Clone("maxp");
+        maxp = (TH1F*)p[0]->Clone("maxp");
         maxp->SetLineColor(kWhite);
         for (Int_t i = 1; i <= maxp->GetNbinsX(); i++)
         {
@@ -343,17 +349,17 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     }
     if (n>=2)
     {
-        TLegend *legend = new TLegend(.6,.7,.9,.9);
-        if (type == Resolution)
-            legend->AddEntry(p[0],names[0],"p");
+        TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
+        if (type == Resolution || type == Profile)
+            legend->AddEntry(p[0],names[0],"pl");
         else
             legend->AddEntry(p[0],names[0],"l");
         for (Int_t i = 1; i < n; i++)
         {
-            if (type == Resolution)
+            if (type == Resolution || type == Profile)
             {
                 p[i]->Draw("same P");
-                legend->AddEntry(p[i],names[i],"p");
+                legend->AddEntry(p[i],names[i],"pl");
             }
             else
             {
@@ -361,6 +367,20 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
                 legend->AddEntry(p[i],names[i],"l");
             }
         }
+        
+        c1->Update();
+        Double_t x1min  = .9*gPad->GetUxmin() + .1*gPad->GetUxmax();
+        Double_t x2max  = .1*gPad->GetUxmin() + .9*gPad->GetUxmax();
+        Double_t y1min  = .9*gPad->GetUymin() + .1*gPad->GetUymax();
+        Double_t y2max  = .1*gPad->GetUymin() + .9*gPad->GetUymax();
+        Double_t width  = .4*(x2max-x1min);
+        Double_t height = .3*(y2max-y1min);
+        //if (type == Histogram || type == OrgHistogram)
+        {
+            Double_t newy2max = placeLegend(legend,width,height,x1min,y1min,x2max,y2max);
+            maxp->GetYaxis()->SetRangeUser(gPad->GetUymin(),(newy2max-.1*gPad->GetUymin())/.9);
+        }
+                
         legend->SetFillStyle(0);
         legend->Draw();
     }
@@ -368,12 +388,13 @@ void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char
     {
         saveplot(c1,saveas);
     }
+    return legend;
 }
 
-void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
+TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,Double_t cut = 3,Char_t *saveas = "")
 {
-    trackSplitPlot(nFiles,files,names,"",var,relative,logscale,false,pull,0,cut,saveas);
+    return trackSplitPlot(nFiles,files,names,"",var,relative,logscale,false,pull,0,cut,saveas);
 }
 
 
