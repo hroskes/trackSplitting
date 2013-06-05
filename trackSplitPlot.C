@@ -1,7 +1,19 @@
 #include "tdrstyle.C"
-#include "axislabel.C"
 #include "averages.C"
 #include "placeLegend.C"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TGraphErrors.h"
+#include "TMultiGraph.h"
+#include "TText.h"
+#include <iostream>
+
+using namespace std;
+
+void placeholder(TString saveas = "");
+void saveplot(TCanvas *c1,TString saveas);
 
 //profile =  true:   profile
 //profile =  false:  scatter plot
@@ -12,15 +24,15 @@ const Int_t nColors = 13;
 const Color_t colors[nColors] = {kRed,kBlue,kGreen,kMagenta,kCyan,kYellow,kBlack,
                                  kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
 
-const Double_t maxBinsScatterPlotx = 1000;
-const Double_t maxBinsScatterPloty = 1000;
-const Double_t maxBinsHistogram = 100;
-const Double_t maxBinsProfileResolution = 25;
-      Double_t    binsProfileResolution = 8;     //for everything but runNumber
+const Int_t maxBinsScatterPlotx = 1000;
+const Int_t maxBinsScatterPloty = 1000;
+const Int_t maxBinsHistogram = 100;
+const Int_t maxBinsProfileResolution = 25;
+      Int_t    binsProfileResolution = 8;     //for everything but runNumber and nHits
 
-TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
+void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                    Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
+                    Double_t xcut = 10,Double_t ycut = 3,TString saveas = "")
 {
     cout << xvar << " " << yvar << endl;
     if (relative && pull)
@@ -49,15 +61,14 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
         return;
     }
 
-    setTDRStyle();
-    set_plot_style();
-    gStyle->SetOptStat(0);
+    TStyle *tdrStyle = setTDRStyle();
+    tdrStyle->SetOptStat(0);
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
-        gStyle->SetOptStat(1110);
+        tdrStyle->SetOptStat(1110);
     if (type == ScatterPlot)
     {
-        gStyle->SetCanvasDefW(678);
-        gStyle->SetPadRightMargin(0.115);
+        tdrStyle->SetCanvasDefW(678);
+        tdrStyle->SetPadRightMargin(0.115);
     }
 
     Double_t nBinsScatterPlotx = maxBinsScatterPlotx;
@@ -142,13 +153,14 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
 
     for (Int_t i = 0; i < n; i++)
     {
-        TFile *f = new TFile(files[i]);
-        TTree *tree = (TTree*)f->Get("splitterTree");
+        TFile f(files[i]);
+        TTree *tree = (TTree*)f.Get("splitterTree");
 
         stringstream sid;
         sid << "p" << i;
         TString id = sid.str();
 
+        TH1F *q[maxBinsProfileResolution];
         if (type == ScatterPlot)
             p[i] = new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPloty,ymin,ymax);
         if (type == Histogram)
@@ -158,7 +170,6 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
         if (type == Resolution || type == Profile)
         {
             p[i] = new TH1F(id,"",nBinsProfileResolution,xmin,xmax);
-            TH1F *q[maxBinsProfileResolution];
             for (Int_t j = 0; j < nBinsProfileResolution; j++)
             {
                 stringstream sid2;
@@ -167,8 +178,9 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
                 q[j] = new TH1F(id2,"",nBinsHistogram,ymin,ymax);
             }
         }
+        p[i]->SetDirectory(0);
 
-        Double_t x = 0, x2 = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+        Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
         Int_t xint = 0, xint2 = 0;
 
         if (!relative && !pull && (yvar == "dz" || yvar == "dxy"))
@@ -302,13 +314,13 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
     if (type == Histogram)
         c1->SetLogx((Bool_t)(logscale));
 
-    TH1F *maxp = p[0];
+    TH1 *maxp = p[0];
+    TGraphErrors *g[n];
+    TMultiGraph *list = new TMultiGraph();
     if (type == ScatterPlot)
         p[0]->Draw("COLZ");
     else if (type == Resolution || type == Profile)
     {
-        TGraphErrors *g[n];
-        TMultiGraph *list = new TMultiGraph();
         for (Int_t i = 0; i < n; i++)
         {
             g[i] = new TGraphErrors(p[i]);
@@ -347,9 +359,9 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
         maxp->Draw();
         p[0]->Draw("same");
     }
+    TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
     if (n>=2)
     {
-        TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
         if (type == Resolution || type == Profile)
             legend->AddEntry(p[0],names[0],"pl");
         else
@@ -375,11 +387,8 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
         Double_t y2max  = .1*gPad->GetUymin() + .9*gPad->GetUymax();
         Double_t width  = .4*(x2max-x1min);
         Double_t height = .3*(y2max-y1min);
-        //if (type == Histogram || type == OrgHistogram)
-        {
-            Double_t newy2max = placeLegend(legend,width,height,x1min,y1min,x2max,y2max);
-            maxp->GetYaxis()->SetRangeUser(gPad->GetUymin(),(newy2max-.1*gPad->GetUymin())/.9);
-        }
+        Double_t newy2max = placeLegend(legend,width,height,x1min,y1min,x2max,y2max);
+        maxp->GetYaxis()->SetRangeUser(gPad->GetUymin(),(newy2max-.1*gPad->GetUymin())/.9);
                 
         legend->SetFillStyle(0);
         legend->Draw();
@@ -387,12 +396,19 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,
     if (saveas != "")
     {
         saveplot(c1,saveas);
+        for (int i = 0; i < n; i++)
+        {
+            //delete p[i];
+            //delete g[i];
+        }
+        //delete list;
+        //delete maxp;
+        //delete legend;
     }
-    return legend;
 }
 
-TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,Double_t cut = 3,Char_t *saveas = "")
+void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
+                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,Double_t cut = 3,TString saveas = "")
 {
     return trackSplitPlot(nFiles,files,names,"",var,relative,logscale,false,pull,0,cut,saveas);
 }
@@ -401,34 +417,33 @@ TLegend* trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
 
 //For 1 file
 
-void trackSplitPlot(Char_t *file,Char_t *xvar,Char_t *yvar,Bool_t profile = kFALSE,
+void trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFALSE,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                    Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
+                    Double_t xcut = 10,Double_t ycut = 3,TString saveas = "")
 {
-    if (profile)
-        Int_t nFiles = 1;
-    else
-        Int_t nFiles = 0;                       //it interprets nFiles < 1 as 1 file, make a scatterplot
-    Char_t **files = &file;
-    Char_t *name = "";
-    Char_t **names = &name;
+    Int_t nFiles = 0;
+    if (profile)                       //it interprets nFiles < 1 as 1 file, make a scatterplot
+        nFiles = 1;
+    TString *files = &file;
+    TString name = "";
+    TString *names = &name;
     trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,xcut,ycut,saveas);
 }
 
 //1D version
 
-void trackSplitPlot(Char_t *file,Char_t *var,
+void trackSplitPlot(TString file,TString var,
                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,
-                    Double_t cut = 3,Char_t *saveas = "")
+                    Double_t cut = 3,TString saveas = "")
 {
     Int_t nFiles = 1;
-    Char_t **files = &file;
-    Char_t *name = "";
-    Char_t **names = &name;
+    TString *files = &file;
+    TString name = "";
+    TString *names = &name;
     trackSplitPlot(nFiles,files,names,var,relative,logscale,pull,cut,saveas);
 }
 
-void placeholder(Char_t *saveas = "")
+void placeholder(TString saveas)
 {
     setTDRStyle();
     TText *line1 = new TText(.5,.6,"This is a placeholder so that when there are");
@@ -442,7 +457,7 @@ void placeholder(Char_t *saveas = "")
         saveplot(c1,saveas);
 }
 
-void saveplot(TCanvas *c1,Char_t *saveas)
+void saveplot(TCanvas *c1,TString saveas)
 {
     if (saveas == "")
         return;
@@ -470,4 +485,3 @@ void saveplot(TCanvas *c1,Char_t *saveas)
         c1->SaveAs(saveas);
     }
 }
-

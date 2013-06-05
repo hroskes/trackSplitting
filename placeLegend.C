@@ -1,6 +1,16 @@
+#include "TLegend.h"
+#include "TLegendEntry.h"
+#include "TObject.h"
+#include "TClass.h"
+#include "TH1.h"
+#include "TList.h"
+#include "TProfile.h"
+
 Int_t legendGrid = 100;
 Double_t margin = .1;
 Double_t increaseby = .1;
+
+Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 Double_t placeLegend(TLegend *l, Double_t width, Double_t height, Double_t x1min, Double_t y1min, Double_t x2max, Double_t y2max)
 {
@@ -38,11 +48,11 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2)
     for (Int_t k = 0; list->At(k) != 0 && fits; k++)
     {
         TObject *obj = ((TLegendEntry*)(list->At(k)))->GetObject();
-        TClass *class = obj->IsA();
+        TClass *cl = obj->IsA();
 
         //Histogram, drawn as a histogram
-        if (class->InheritsFrom("TH1") && !class->InheritsFrom("TH2") && !class->InheritsFrom("TH3")
-         && class != TProfile::Class() && ((TH1*)obj)->GetMarkerStyle() == 1)
+        if (cl->InheritsFrom("TH1") && !cl->InheritsFrom("TH2") && !cl->InheritsFrom("TH3")
+         && cl != TProfile::Class() && ((TH1*)obj)->GetMarkerStyle() == 1)
         {
             Int_t where = 0;
             TH1 *h = (TH1*)obj;
@@ -65,8 +75,9 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2)
             continue;
         }
         //Histogram, drawn with Draw("P")
-        else if (class->InheritsFrom("TH1") && !class->InheritsFrom("TH2") && !class->InheritsFrom("TH3")
-              && class != TProfile::Class())
+        else if (cl->InheritsFrom("TH1") && !cl->InheritsFrom("TH2") && !cl->InheritsFrom("TH3")
+              && cl != TProfile::Class())
+        //Probably TProfile would be the same but I haven't tested
         {
             TH1 *h = (TH1*)obj;
             for (Int_t i = 1; i <= h->GetNbinsX() && fits; i++)

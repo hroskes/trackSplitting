@@ -2,12 +2,13 @@
 #include "TString.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TMath.h"
 
 enum Statistic {Minimum, Maximum, Average, StdDev};
 
 using namespace std;
 
-Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
     Int_t xint = 0, xint2 = 0;                                 //xint is for integer variables like runNumber and nHits.  xint2 is for nHits.
@@ -27,18 +28,21 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
     if (what == StdDev)
         average = findStatistic(Average,nFiles,files,var,axis,relative,pull);
 
+    TString beginningofvar = var;
+    beginningofvar.Remove(5);
+
     stringstream sx,srel,ssigma1,ssigma2;
 
     if (axis == 'y')
         sx << "Delta_";
     sx << var;
-    if (axis == 'x' && var != "runNumber" && var != "nHits")
+    if (axis == 'x' && var != "runNumber" && beginningofvar != "nHits")
         sx << "_org";
-    if (axis == 'x' && var == "nHits")
+    if (axis == 'x' && beginningofvar == "nHits")
         sx << "1_spl";
     TString variable = sx.str(),
             variable2 = variable;
-    variable2.ReplaceAll("1","2");
+    variable2.ReplaceAll("1_spl","2_spl");
 
     TString relvariable = "1";
     if (relative)
@@ -67,7 +71,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
 
         if (var == "runNumber")
             tree->SetBranchAddress(variable,&xint);
-        else if (var == "nHits")
+        else if (beginningofvar == "nHits")
         {
             tree->SetBranchAddress(variable,&xint);
             tree->SetBranchAddress(variable2,&xint2);
@@ -86,7 +90,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
         for (Int_t i = 0; i<length; i++)
         {
             tree->GetEntry(i);
-            if (var == "runNumber" || var == "nHits")
+            if (var == "runNumber" || beginningofvar == "nHits")
                 x = xint;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
@@ -97,7 +101,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
                 result += x;
             if (what == StdDev)
                 result += (x - average) * (x - average);
-            if (var == "nHits")
+            if (beginningofvar == "nHits")
             {
                 x = xint2;
                 x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
@@ -112,56 +116,57 @@ Double_t findStatistic(Statistic what,Int_t nFiles,Char_t **files,Char_t *var,Ch
             }
         }
         f->Close();
+        delete f;
     }
-    if (var == "nHits") totallength *= 2;
+    if (beginningofvar == "nHits") totallength *= 2;
     if (what == Average) result /= totallength;
     if (what == StdDev)  result = sqrt(result / (totallength - 1));
     return result;
 }
 
-Double_t findAverage(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findAverage(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Average,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findMin(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMin(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Minimum,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findMax(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Maximum,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findStdDev(Int_t nFiles,Char_t **files,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStdDev(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(StdDev,nFiles,files,var,axis,relative,pull);
 }
 
 
 
-Double_t findStatistic(Statistic what,Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStatistic(Statistic what,TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(what,1,&file,var,axis,relative,pull);
 }
 
-Double_t findAverage(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findAverage(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Average,file,var,axis,relative,pull);
 }
 
-Double_t findMin(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMin(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Minimum,file,var,axis,relative,pull);
 }
 
-Double_t findMax(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(Maximum,file,var,axis,relative,pull);
 }
 
-Double_t findStdDev(Char_t *file,Char_t *var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStdDev(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
     return findStatistic(StdDev,file,var,axis,relative,pull);
 }

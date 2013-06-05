@@ -1,4 +1,5 @@
-
+#include "RooGlobalFunc.h"
+#include "RooRealVar.h"
 using namespace RooFit;
 
 void unbinnedFits(TString varName="Delta_pt",

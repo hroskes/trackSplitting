@@ -1,3 +1,8 @@
+#include "TString.h"
+#include "TH1.h"
+#include <sstream>
+using namespace std;
+
 enum PlotType {ScatterPlot,Profile,Histogram,OrgHistogram,Resolution};
 //ScatterPlot:  make a scatterplot of Delta_yvar vs. xvar_org
 //Profile:      make a profile of Delta_yvar vs. xvar_org
@@ -5,7 +10,7 @@ enum PlotType {ScatterPlot,Profile,Histogram,OrgHistogram,Resolution};
 //OrgHistogram: make a histogram of xvar_org
 //Resolution:   make a plot of (width of Delta_yvar) vs xvar_org
 
-Char_t *fancyname(Char_t *variable)
+TString fancyname(TString variable)
 {
     if (variable == "pt")
         return "p_{T}";
@@ -23,7 +28,7 @@ Char_t *fancyname(Char_t *variable)
         return variable;
 }
 
-Char_t *units(Char_t *variable,Char_t axis)
+TString units(TString variable,Char_t axis)
 {
     if (variable == "pt")
         return "GeV";
@@ -39,7 +44,7 @@ Char_t *units(Char_t *variable,Char_t axis)
     return "";
 }
 
-TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE, Bool_t pull = kFALSE)
+TString axislabel(TString variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE, Bool_t pull = kFALSE)
 {
     stringstream s;
     if (resolution && axis == 'y')
@@ -60,7 +65,7 @@ TString axislabel(Char_t *variable, Char_t axis, Bool_t relative = kFALSE, Bool_
     return s.str();
 }
 
-void setAxisLabels(TH1 *p, PlotType type,Char_t *xvar,Char_t *yvar,Bool_t relative,Bool_t pull)
+void setAxisLabels(TH1 *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull)
 {
     if (type == Histogram)
         p->SetXTitle(axislabel(yvar,'y',relative,false,pull));
