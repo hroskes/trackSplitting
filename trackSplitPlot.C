@@ -71,16 +71,19 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         tdrStyle->SetPadRightMargin(0.115);
     }
 
-    Double_t nBinsScatterPlotx = maxBinsScatterPlotx;
-    Double_t nBinsScatterPloty = maxBinsScatterPloty;
-    Double_t nBinsHistogram = maxBinsHistogram;
-    Double_t nBinsProfileResolution = binsProfileResolution;
+    Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'
+                                   && xvar[3] == 't' && xvar[4] == 's');
+
+    Int_t nBinsScatterPlotx = maxBinsScatterPlotx;
+    Int_t nBinsScatterPloty = maxBinsScatterPloty;
+    Int_t nBinsHistogram = maxBinsHistogram;
+    Int_t nBinsProfileResolution = binsProfileResolution;
     if (xvar == "runNumber")
     {
         nBinsProfileResolution = maxBinsProfileResolution;
         nBinsHistogram = maxBinsProfileResolution;
     }
-    if (xvar == "nHits")
+    if (nHits)
     {
         nBinsHistogram = (int)(findMax(nFiles,files,xvar,'x') - findMin(nFiles,files,xvar,'x') + 1.1);     //in case it's .99999
         nBinsScatterPlotx = nBinsHistogram;
@@ -95,10 +98,12 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     TString xvariable = sx.str();
     TString xvariable2 = "";
     if (xvar == "runNumber") xvariable = "runNumber";
-    if (xvar == "nHits")
+    if (nHits)
     {
-        xvariable = "nHits1_spl";
-        xvariable2 = "nHits2_spl";
+        xvariable  = xvar;
+        xvariable2 = xvar;
+        xvariable.Append("1_spl");
+        xvariable2.Append("2_spl");
     }
 
     sy << "Delta_" << yvar;
@@ -133,7 +138,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
             xmin = 5;
             xmax = 100;
         }
-        else if (xvar == "runNumber" || xvar == "nHits")
+        else if (xvar == "runNumber" || nHits)
         {
             xmin = findMin(nFiles,files,xvar,'x') - .5;
             xmax = findMax(nFiles,files,xvar,'x') + .5;
@@ -190,7 +195,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         {
             if (xvar == "runNumber")
                 tree->SetBranchAddress(xvariable,&xint);
-            else if (xvar == "nHits")
+            else if (nHits)
             {
                 tree->SetBranchAddress(xvariable,&xint);
                 tree->SetBranchAddress(xvariable2,&xint2);
@@ -213,7 +218,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         for (Int_t j = 0; j<length; j++)
         {
             tree->GetEntry(j);
-            if (xvar == "runNumber" || xvar == "nHits")
+            if (xvar == "runNumber" || nHits)
                 x = xint;
             if (relative && xvar == yvar)
             {
@@ -238,7 +243,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
                     p[i]->Fill(x);
             }
 
-            if (xvar == "nHits")
+            if (nHits)
             {
                 x = xint2;
                 if (ymin <= y && y < ymax && xmin <= x && x < xmax)
@@ -309,7 +314,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
-    if (type == ScatterPlot || type == Profile || type == Resolution)
+    if (type == ScatterPlot || type == Profile || type == Resolution || type == OrgHistogram)
         c1->SetLogy((Bool_t)(logscale));
     if (type == Histogram)
         c1->SetLogx((Bool_t)(logscale));

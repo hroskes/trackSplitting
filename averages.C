@@ -28,17 +28,17 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     if (what == StdDev)
         average = findStatistic(Average,nFiles,files,var,axis,relative,pull);
 
-    TString beginningofvar = var;
-    beginningofvar.Remove(5);
+    Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
+                                  && var[3] == 't' && var[4] == 's');
 
     stringstream sx,srel,ssigma1,ssigma2;
 
     if (axis == 'y')
         sx << "Delta_";
     sx << var;
-    if (axis == 'x' && var != "runNumber" && beginningofvar != "nHits")
+    if (axis == 'x' && var != "runNumber" && !nHits)
         sx << "_org";
-    if (axis == 'x' && beginningofvar == "nHits")
+    if (axis == 'x' && nHits)
         sx << "1_spl";
     TString variable = sx.str(),
             variable2 = variable;
@@ -71,7 +71,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 
         if (var == "runNumber")
             tree->SetBranchAddress(variable,&xint);
-        else if (beginningofvar == "nHits")
+        else if (nHits)
         {
             tree->SetBranchAddress(variable,&xint);
             tree->SetBranchAddress(variable2,&xint2);
@@ -90,7 +90,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
         for (Int_t i = 0; i<length; i++)
         {
             tree->GetEntry(i);
-            if (var == "runNumber" || beginningofvar == "nHits")
+            if (var == "runNumber" || nHits)
                 x = xint;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
@@ -101,7 +101,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
                 result += x;
             if (what == StdDev)
                 result += (x - average) * (x - average);
-            if (beginningofvar == "nHits")
+            if (nHits)
             {
                 x = xint2;
                 x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
@@ -118,7 +118,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
         f->Close();
         delete f;
     }
-    if (beginningofvar == "nHits") totallength *= 2;
+    if (nHits) totallength *= 2;
     if (what == Average) result /= totallength;
     if (what == StdDev)  result = sqrt(result / (totallength - 1));
     return result;
