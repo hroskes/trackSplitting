@@ -54,7 +54,9 @@ TString axislabel(TString variable, Char_t axis, Bool_t relative = kFALSE, Bool_
     s << fancyname(variable);
     if (relative && axis == 'y')
         s << " / " << fancyname(variable);
-    if (relative || (axis == 'x' && variable != "runNumber" && variable != "nHits"))
+    Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
+                                  && var[3] == 't' && var[4] == 's');
+    if (relative || (axis == 'x' && variable != "runNumber" && !nHits))
         s << "_{org}";
     if (pull && axis == 'y')
         s << " / #delta(#Delta" << fancyname(variable) << ")";

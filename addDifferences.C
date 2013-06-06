@@ -16,13 +16,15 @@ bool debug_=false;
 // main function 
 // = = = = = = = = = = 
 
-void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
+void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TString outFileName = "")
+{
+  TFile* fin = TFile::Open(inputFile);
 
-  TFile* fin = new TFile(inputFile);
-  TString outFileName = inputFile;
-  outFileName.ReplaceAll(".root","_wDiffs.root");
-
-  TFile *newfile = new TFile(outFileName,"recreate");
+  if (outFileName == "")
+  {
+    outFileName = inputFile;
+    outFileName.ReplaceAll(".root","_wDiffs.root");
+  }
 
   TTree* ch=(TTree*)fin->Get("cosmicValidation/splitterTree"); 
 
@@ -30,6 +32,8 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root"){
     cout << "ERROR: no tree found" << endl;
     return; 
   }
+
+  TFile *newfile = TFile::Open(outFileName,"recreate");
 
   TTree* evt_tree=(TTree*) ch->CloneTree(0, "fast");
   

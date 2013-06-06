@@ -64,7 +64,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 
     for (Int_t j = 0; j < nFiles; j++)
     {
-        TFile *f = new TFile(files[j]);
+        TFile *f = TFile::Open(files[j]);
         TTree *tree = (TTree*)f->Get("splitterTree");
         Int_t length = tree->GetEntries();
         totallength += length;

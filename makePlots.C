@@ -26,7 +26,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "p
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if (false) continue;
+                if (y + ysize * x + 1 <= 33) continue;
 
                 if (x == 9 && y == 8)
                 {

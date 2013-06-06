@@ -4,8 +4,8 @@
 void makeThesePlots()
 {
     const Int_t nFiles = 2
-    Char_t *files[nFiles] = {"TrackSplitting_Split1_Alignment1_wDiffs.root","TrackSplitting_Split2_Alignment2_wDiffs.root"};
-    Char_t *names[nFiles] = {"split1","split2"};
+    TString files[nFiles] = {"TrackSplitting_Split1_Alignment1_wDiffs.root","TrackSplitting_Split2_Alignment2_wDiffs.root"};
+    TString names[nFiles] = {"split1","split2"};
 
   //TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
     Double_t xcut[xsize]           = {-.03, 2.3,   2.5,   1.8,  10,   3,      3,        0,          0,      0};
@@ -23,7 +23,7 @@ void makeThesePlots()
 /*
 void makeThesePlots()
 {
-    Char_t *file = "TrackSplitting_Split_Alignment_wDiffs.root";
+    TString file = "TrackSplitting_Split_Alignment_wDiffs.root";
 
   //TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
     Double_t xcut[xsize]           = {-.03, 2.3,   2.5,   1.8,  10,   3,      3,        0,          0,      0};

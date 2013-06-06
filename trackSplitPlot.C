@@ -158,8 +158,8 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
 
     for (Int_t i = 0; i < n; i++)
     {
-        TFile f(files[i]);
-        TTree *tree = (TTree*)f.Get("splitterTree");
+        TFile *f = TFile::Open(files[i]);
+        TTree *tree = (TTree*)f->Get("splitterTree");
 
         stringstream sid;
         sid << "p" << i;
@@ -262,7 +262,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
                 }
             }
 
-            if (((j+1)/1000)*1000 == j + 1 || j + 1 == length)
+            if (((j+1)/(int)(pow(10,(int)(log10(length))-1)))*(int)(pow(10,(int)(log10(length))-1)) == j + 1 || j + 1 == length)
             {
                 cout << j + 1 << "/" << length << ": "; 
                 if (type == Profile || type == ScatterPlot || type == Resolution)
@@ -311,6 +311,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         {
             p[i]->SetMarkerStyle(1);
         }
+        f->Close();
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
