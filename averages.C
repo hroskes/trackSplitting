@@ -4,7 +4,7 @@
 #include "TTree.h"
 #include "TMath.h"
 
-enum Statistic {Minimum, Maximum, Average, StdDev};
+enum Statistic {Minimum, Maximum, Average, RMS};
 
 using namespace std;
 
@@ -25,7 +25,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     if (what == Maximum) result = -1e100;
 
     Double_t average = 0;
-    if (what == StdDev)
+    if (what == RMS)
         average = findStatistic(Average,nFiles,files,var,axis,relative,pull);
 
     Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
@@ -99,7 +99,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
                 result = x;
             if (what == Average)
                 result += x;
-            if (what == StdDev)
+            if (what == RMS)
                 result += (x - average) * (x - average);
             if (nHits)
             {
@@ -111,7 +111,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
                     result = x;
                 if (what == Average)
                     result += x;
-                if (what == StdDev)
+                if (what == RMS)
                     result += (x - average) * (x - average);
             }
         }
@@ -120,7 +120,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     }
     if (nHits) totallength *= 2;
     if (what == Average) result /= totallength;
-    if (what == StdDev)  result = sqrt(result / (totallength - 1));
+    if (what == RMS)  result = sqrt(result / (totallength - 1));
     return result;
 }
 
@@ -139,9 +139,9 @@ Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t rela
     return findStatistic(Maximum,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findStdDev(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    return findStatistic(StdDev,nFiles,files,var,axis,relative,pull);
+    return findStatistic(RMS,nFiles,files,var,axis,relative,pull);
 }
 
 
@@ -166,7 +166,7 @@ Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,B
     return findStatistic(Maximum,file,var,axis,relative,pull);
 }
 
-Double_t findStdDev(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    return findStatistic(StdDev,file,var,axis,relative,pull);
+    return findStatistic(RMS,file,var,axis,relative,pull);
 }

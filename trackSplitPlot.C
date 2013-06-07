@@ -126,12 +126,9 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     sigma2variable = ssigma2.str();
 
 
-    Double_t xaverage,xstddev,xmin = -1,xmax = 1,yaverage,ystddev,ymin = -1,ymax = 1;
+    Double_t xaverage,xrms,xmin = -1,xmax = 1,yaverage,yrms,ymin = -1,ymax = 1;
     if (type == Profile || type == ScatterPlot || type == OrgHistogram || type == Resolution)
     {
-        xaverage = findAverage(nFiles,files,xvar,'x');
-        xstddev  = findStdDev (nFiles,files,xvar,'x');
-        xmax     = TMath::Min(xaverage + xcut * xstddev,findMax(nFiles,files,xvar,'x'));
 
         if (xvar == "pt")
         {
@@ -144,13 +141,18 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
             xmax = findMax(nFiles,files,xvar,'x') + .5;
         }
         else
-            xmin = TMath::Max(xaverage - xcut * xstddev,findMin(nFiles,files,xvar,'x'));
+        {
+            xaverage = findAverage(nFiles,files,xvar,'x');
+            xrms     = findRMS    (nFiles,files,xvar,'x');
+            xmax     = TMath::Min(xaverage + xcut * xrms,findMax(nFiles,files,xvar,'x'));
+            xmin     = TMath::Max(xaverage - xcut * xrms,findMin(nFiles,files,xvar,'x'));
+        }
     }
     if (type == Profile || type == ScatterPlot || type == Histogram || type == Resolution)
     {
         yaverage = 0 /*findAverage(nFiles,files,yvar,'y',relative,pull)*/;
-        ystddev  = findStdDev (nFiles,files,yvar,'y',relative,pull);
-        ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut*ystddev,
+        yrms     = findRMS (nFiles,files,yvar,'y',relative,pull);
+        ymin     = TMath::Max(TMath::Max(-TMath::Abs(yaverage) - ycut*yrms,
                               findMin(nFiles,files,yvar,'y',relative,pull)),
                               -findMax(nFiles,files,yvar,'y',relative,pull));
         ymax     = -ymin;
