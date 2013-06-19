@@ -57,7 +57,9 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     tdrStyle->SetOptStat(0);
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
         tdrStyle->SetOptStat(1110);
-    if (type == ScatterPlot || (type == Histogram && yvar == "phi" && !pull) || xvar == "runNumber")
+    if (type == ScatterPlot
+    || (type == Histogram && (yvar == "phi" || yvar == "eta" || yvar == "theta" || yvar == "qoverpt") && !pull)
+    || xvar == "runNumber")
     {
         tdrStyle->SetCanvasDefW(678);
         tdrStyle->SetPadRightMargin(0.115);
