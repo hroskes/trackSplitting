@@ -12,6 +12,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 {
     Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
     Int_t xint = 0, xint2 = 0;                                 //xint is for integer variables like runNumber and nHits.  xint2 is for nHits.
+     Int_t runNumber = 0;
 
     if (axis == 'x')
     {
@@ -64,11 +65,14 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 
     for (Int_t j = 0; j < nFiles; j++)
     {
+        if (files[j].Contains("MC") && var == "runNumber")
+            continue;
         TFile *f = TFile::Open(files[j]);
         TTree *tree = (TTree*)f->Get("splitterTree");
         Int_t length = tree->GetEntries();
         totallength += length;
 
+        tree->SetBranchAddress("runNumber",&runNumber);
         if (var == "runNumber")
             tree->SetBranchAddress(variable,&xint);
         else if (nHits)
@@ -92,6 +96,9 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
             tree->GetEntry(i);
             if (var == "runNumber" || nHits)
                 x = xint;
+            if (var == "runNumber")
+                runNumber = x;
+            if (runNumber > 167784) continue;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
                 result = x;
@@ -170,3 +177,4 @@ Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,B
 {
     return findStatistic(RMS,file,var,axis,relative,pull);
 }
+

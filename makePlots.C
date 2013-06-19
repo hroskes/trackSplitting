@@ -18,7 +18,8 @@ Double_t histcutdef[ysize]     = {3,      .05,    3,      3,      1,      3,    
 void placeholders(TString directory);
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "plots",
-               Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, Double_t *histcut = histcutdef)
+               Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, Double_t *histcut = histcutdef,
+               Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     for (Int_t x = 0; x < xsize; x++)
     {
@@ -26,7 +27,8 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "p
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if (y + ysize * x + 1 <= 33) continue;
+                if (false) continue;
+                if (y + ysize*x + 1 < min || y + ysize*x + 1 > max) continue;
 
                 if (x == 9 && y == 8)
                 {
@@ -122,12 +124,24 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "p
 }
 
 void makePlots(TString file,TString directory = "plots",Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, 
-               Double_t *histcut = histcutdef)
+               Double_t *histcut = histcutdef, Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     TString *files = &file;
     TString name = "plot";
     TString *names = &name;
-    makePlots(1,files,names,directory,xcut,yplotcut,yprofilecut,histcut);
+    makePlots(1,files,names,directory,xcut,yplotcut,yprofilecut,histcut,min,max);
+}
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "plots",
+               Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, Double_t *histcut = histcutdef)
+{
+    makePlots(nFiles,files,names,directory,xcut,yplotcut,yprofilecut,histcut,0,ysize*xsize+100);
+}
+
+void makePlots(TString file,TString directory = "plots",Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, 
+               Double_t *histcut = histcutdef)
+{
+    makePlots(file,directory,xcut,yplotcut,yprofilecut,histcut,0,ysize*xsize+100);
 }
 
 void placeholders(TString directory)

@@ -1,5 +1,6 @@
 #include "TString.h"
 #include "TH1.h"
+#include "TMultiGraph.h"
 #include <sstream>
 using namespace std;
 
@@ -79,3 +80,17 @@ void setAxisLabels(TH1 *p, PlotType type,TString xvar,TString yvar,Bool_t relati
     if (type == Resolution)
         p->SetYTitle(axislabel(yvar,'y',relative,true,pull));
 }
+
+void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull)
+{
+    if (type == Histogram)
+        p->GetXaxis()->SetTitle(axislabel(yvar,'y',relative,false,pull));
+    if (type == ScatterPlot || type == Profile || type == Resolution || type == OrgHistogram)
+        p->GetXaxis()->SetTitle(axislabel(xvar,'x'));
+
+    if (type == ScatterPlot || type == Profile)
+        p->GetYaxis()->SetTitle(axislabel(yvar,'y',relative,false,pull));
+    if (type == Resolution)
+        p->GetYaxis()->SetTitle(axislabel(yvar,'y',relative,true,pull));
+}
+

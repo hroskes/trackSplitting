@@ -178,6 +178,8 @@ TStyle *setTDRStyle() {
 
   //gROOT->ForceStyle();
 
+  TGaxis::SetMaxDigits(4);
+
   return tdrStyle;
 }
 
