@@ -146,6 +146,7 @@ void makePlots(TString file,TString directory = "plots",Double_t *xcut = xcutdef
 
 void placeholders(TString directory)
 {
+    /*
     TString filename = "orghist.z_placeholder1.pngepsroot";
     TString slashstring = "";
     if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
@@ -154,4 +155,6 @@ void placeholders(TString directory)
     placeholder(filename);
     placeholder(filename.ReplaceAll("placeholder1","placeholder2"));
     placeholder(filename.ReplaceAll("placeholder2","placeholder3"));
+    */
+    //keeping this space in case any more placeholders are needed in the future
 }

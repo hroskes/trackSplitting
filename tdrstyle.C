@@ -6,6 +6,7 @@
 #include "TStyle.h"
 #include "TColor.h"
 #include "axislabel.C"
+#include "TGaxis.h"
 
 // tdrGrid: Turns the grid lines on (true) or off (false)
 

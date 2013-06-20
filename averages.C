@@ -6,6 +6,9 @@
 
 enum Statistic {Minimum, Maximum, Average, RMS};
 
+Int_t minrun = -1;
+Int_t maxrun = -1;
+
 using namespace std;
 
 Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
@@ -70,7 +73,6 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
         TFile *f = TFile::Open(files[j]);
         TTree *tree = (TTree*)f->Get("splitterTree");
         Int_t length = tree->GetEntries();
-        totallength += length;
 
         tree->SetBranchAddress("runNumber",&runNumber);
         if (var == "runNumber")
@@ -98,7 +100,9 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
                 x = xint;
             if (var == "runNumber")
                 runNumber = x;
-            if (runNumber > 167784) continue;
+            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0)) continue;
+            
+            totallength++;
             x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
             if (what == Minimum && x < result)
                 result = x;

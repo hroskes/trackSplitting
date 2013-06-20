@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void placeholder(TString saveas = "");
+void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
 
 //profile =  true:   profile
@@ -21,8 +21,8 @@ void saveplot(TCanvas *c1,TString saveas);
 //relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
 
 const Int_t nColors = 13;
-const Color_t colors[nColors] = {1,2,4,3,kMagenta,kCyan,kYellow,
-                                 kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
+Color_t colors[nColors] = {1,2,4,3,kMagenta,kCyan,kYellow,
+                           kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
 
 const Int_t maxBinsScatterPlotx = 1000;
 const Int_t maxBinsScatterPloty = 1000;
@@ -35,11 +35,6 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
                     Double_t xcut = 10,Double_t ycut = 3,TString saveas = "")
 {
     cout << xvar << " " << yvar << endl;
-    if (relative && pull)
-    {
-        placeholder(saveas);
-        return;
-    }
     if (xvar == "" && yvar == "")
         return;
 
@@ -57,12 +52,16 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     tdrStyle->SetOptStat(0);
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
         tdrStyle->SetOptStat(1110);
-    if (type == ScatterPlot
-    || (type == Histogram && (yvar == "phi" || yvar == "eta" || yvar == "theta" || yvar == "qoverpt") && !pull)
-    || xvar == "runNumber")
+    if (type == ScatterPlot || (type == Histogram && !pull) || xvar == "runNumber")
     {
         tdrStyle->SetCanvasDefW(678);
         tdrStyle->SetPadRightMargin(0.115);
+    }
+
+    if (relative && pull)
+    {
+        placeholder(saveas,true);
+        return;
     }
 
     Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'
@@ -309,7 +308,11 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
                 x = xint;
             if (xvar == "runNumber")
                 runNumber = x;
-            if (runNumber > 167784) {notincluded++; continue;}
+            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0)) 
+            {
+                notincluded++;
+                continue;
+            }
             if (relative && xvar == yvar)
             {
                 rel = x;
@@ -573,9 +576,11 @@ void trackSplitPlot(TString file,TString var,
     trackSplitPlot(nFiles,files,names,var,relative,logscale,pull,cut,saveas);
 }
 
-void placeholder(TString saveas)
+void placeholder(TString saveas,Bool_t wide)
 {
-    setTDRStyle();
+    TStyle *tdrStyle = setTDRStyle();
+    if (wide)
+        tdrStyle->SetCanvasDefW(678);
     TText *line1 = new TText(.5,.6,"This is a placeholder so that when there are");
     TText *line2 = new TText(.5,.4,"4 plots per line it lines up nicely");
     line1->SetTextAlign(22);
