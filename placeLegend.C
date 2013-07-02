@@ -14,6 +14,7 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 Double_t placeLegend(TLegend *l, Double_t width, Double_t height, Double_t x1min, Double_t y1min, Double_t x2max, Double_t y2max)
 {
+  //cout << y2max << endl;
     for (int i = legendGrid; i >= 0; i--)
     {
         for (int j = legendGrid; j >= 0; j--)
@@ -48,6 +49,7 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2)
     for (Int_t k = 0; list->At(k) != 0 && fits; k++)
     {
         TObject *obj = ((TLegendEntry*)(list->At(k)))->GetObject();
+        if (obj == 0) continue;
         TClass *cl = obj->IsA();
 
         //Histogram, drawn as a histogram

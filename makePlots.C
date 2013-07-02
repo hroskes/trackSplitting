@@ -1,24 +1,20 @@
-#include "trackSplitPlot.C"
+#include "misalignmentDependence.C"
 #include "TString.h"
 #include "TROOT.h"
 
 const Int_t xsize = 10;
 const Int_t ysize = 9;
 
-TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
-Double_t xcutdef[xsize]        = {-.03, 2.3,   2.5,   1.8,  10,   3,      3,        0,          0,      0};
+bool misalign = false;
 
+TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
 TString yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
 Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
 Bool_t logscale[ysize]         = {kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
-Double_t yplotcutdef[ysize]    = {.015,   .001,   3,      3,      .25,    3,      3,       3,         0};
-Double_t yprofilecutdef[ysize] = {3,      3,      3,      3,      3,      3,      3,       3,         0};
-Double_t histcutdef[ysize]     = {3,      .05,    3,      3,      1,      3,      3,       3,         0};
 
 void placeholders(TString directory);
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "plots",
-               Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, Double_t *histcut = histcutdef,
                Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     for (Int_t x = 0; x < xsize; x++)
@@ -34,15 +30,6 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "p
                 {
                     if (!pull) placeholders(directory);
                     continue;
-                }
-                Double_t plottemp    = yplotcut[y];
-                Double_t profiletemp = yprofilecut[y];
-                Double_t histtemp    = histcut[y];
-                if (pull)
-                {
-                    yplotcut[y]    = 3;
-                    yprofilecut[y] = 3;
-                    histcut[y]    = 3;
                 }
 
                 const Int_t nPlots = nFiles+2;
@@ -95,57 +82,102 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "p
                 for (i = 0; i < nFiles; i++)
                 {
                     if (xvariables[x] == "" || yvariables[y] == "") continue;
-                    //trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kFALSE,(bool)pull,xcut[x],yplotcut[y],s[i]);
+                    //trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kFALSE,(bool)pull,s[i]);
                     //delete gROOT->GetListOfCanvases()->Last();
                 }
 
                 if (xvariables[x] != "" && yvariables[y] != "")
                 {
-                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,xcut[x],yprofilecut[y],s[i]);
+                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,s[i]);
                     delete gROOT->GetListOfCanvases()->Last();
-                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kTRUE ,(bool)pull,xcut[x],yprofilecut[y],s[i+1]);
+                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kTRUE ,(bool)pull,s[i+1]);
                     delete gROOT->GetListOfCanvases()->Last();
                 }
                 else
                 {
-                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,xcut[x],histcut[y]    ,s[i]);
+                    trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,s[i]);
                     delete gROOT->GetListOfCanvases()->Last();
                 }
-                if (pull)
-                {
-                    yplotcut[y]    = plottemp;
-                    yprofilecut[y] = profiletemp;
-                    histcut[y]     = histtemp;
-                }
             }
-            cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
+            if (!misalign)
+                cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
+            else
+                cout << y + ysize * x + 1 << "/" << (xsize+1)*ysize << endl;
         }
     }
 }
 
-void makePlots(TString file,TString directory = "plots",Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, 
-               Double_t *histcut = histcutdef, Int_t min = 0, Int_t max = xsize*ysize + 100)
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory = "plots",
+               Int_t min = 0, Int_t max = xsize*ysize + 100)
+{
+    const int n = nFiles;
+    if (names == 0)
+    {
+        names = new TString[n];
+        for (int i = 0; i < n; i++)
+        {
+            stringstream s;
+            s << values[i];
+            names[i] = s.str();
+        }
+    }
+    misalign = true;
+    makePlots(nFiles,files,names,directory,min,max);
+    misalign = false;
+    int x = xsize;
+
+    TString slashstring = "";
+    if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
+
+    for (int y = 0; y < ysize; y++)
+    {
+        if (y + ysize * x + 1 < min || y + ysize * x + 1 > max) continue;
+        for (int resolution = 0; resolution < 2; resolution++)
+        {
+            for (int pull = 0; pull < 2; pull++)
+            {
+                TString plotname;
+                if (!resolution)
+                    plotname = "profile";
+                else
+                    plotname = "resolution";
+
+                TString pullstring = "";
+                if (pull) pullstring = "pull.";
+
+                TString xvarstring = misalignment;
+                xvarstring.Append(".");
+
+                TString yvarstring = yvariables[y];
+                yvarstring.Prepend("Delta_");
+
+                TString relativestring = "";
+                if (relative[y]) relativestring = ".relative";
+
+                stringstream s;
+                s << directory << slashstring << plotname << "." << pullstring
+                  << xvarstring << yvarstring << relativestring << ".pngepsroot";
+
+                misalignmentDependence(nFiles,files,values,misalignment,yvariables[y],relative[y],logscale[y],resolution,pull,s.str());
+                delete gROOT->GetListOfCanvases()->Last();
+            }
+        }
+        cout << y + ysize * x + 1 << "/" << (xsize+1)*ysize << endl;
+    }
+}
+
+void makePlots(TString file,TString directory = "plots", 
+               Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     TString *files = &file;
     TString name = "plot";
     TString *names = &name;
-    makePlots(1,files,names,directory,xcut,yplotcut,yprofilecut,histcut,min,max);
-}
-
-void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "plots",
-               Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, Double_t *histcut = histcutdef)
-{
-    makePlots(nFiles,files,names,directory,xcut,yplotcut,yprofilecut,histcut,0,ysize*xsize+100);
-}
-
-void makePlots(TString file,TString directory = "plots",Double_t *xcut = xcutdef,Double_t *yplotcut = yplotcutdef,Double_t *yprofilecut = yprofilecutdef, 
-               Double_t *histcut = histcutdef)
-{
-    makePlots(file,directory,xcut,yplotcut,yprofilecut,histcut,0,ysize*xsize+100);
+    makePlots(1,files,names,directory,min,max);
 }
 
 void placeholders(TString directory)
 {
+    directory = directory; //to keep it from giving a warning unused parameter
     /*
     TString filename = "orghist.z_placeholder1.pngepsroot";
     TString slashstring = "";
