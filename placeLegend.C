@@ -90,7 +90,20 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2)
                 if (h->GetBinContent(i) + h->GetBinError(i) > y2 && h->GetBinContent(i) - h->GetBinError(i) < y2) fits = false;
                 if (h->GetBinContent(i) + h->GetBinError(i) > y1 && h->GetBinContent(i) - h->GetBinError(i) < y1) fits = false;
             }
-            
+        }
+        else if (cl->InheritsFrom("TF1") && !cl->InheritsFrom("TF2"))
+        {
+            TF1 *f = (TF1*)obj;
+            Double_t max = f->GetMaximum(x1,x2);
+            Double_t min = f->GetMinimum(x1,x2);
+            if (min < y2 && max > y1) fits = false;
+        }
+        // else if (cl->InheritsFrom(...... add more objects here
+        else
+        {
+            cout << "Don't know how to place the legend around objects of type " << obj->ClassName() << "." << endl
+                 << "Add this class into placeLegend.C if you want it to work properly." << endl
+                 << "The legend will still be placed around any other objects." << endl;
         }
     }
     return fits;
