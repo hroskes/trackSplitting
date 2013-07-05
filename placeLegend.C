@@ -14,7 +14,6 @@ Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 Double_t placeLegend(TLegend *l, Double_t width, Double_t height, Double_t x1min, Double_t y1min, Double_t x2max, Double_t y2max)
 {
-  //cout << y2max << endl;
     for (int i = legendGrid; i >= 0; i--)
     {
         for (int j = legendGrid; j >= 0; j--)

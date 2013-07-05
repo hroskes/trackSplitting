@@ -30,13 +30,13 @@ Int_t binsHistogram = 100;
 Int_t runNumberBins = 30;
 Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
 
-void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                    TString saveas = "")
+TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
+                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                     TString saveas = "")
 {
     cout << xvar << " " << yvar << endl;
     if (xvar == "" && yvar == "")
-        return;
+        return 0;
 
     PlotType type;
     if (xvar == "")      type = Histogram;
@@ -61,7 +61,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     if (relative && pull)
     {
         placeholder(saveas,true);
-        return;
+        return 0;
     }
 
     Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'
@@ -83,7 +83,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         nBinsProfileResolution = nBinsHistogram;
     }
 
-    TH1 *p[n];
+    TH1 **p = new TH1*[n];
     Int_t lengths[n];
 
     stringstream sx,sy,srel,ssigma1,ssigma2;
@@ -146,7 +146,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         }
         else if (xvar == "theta")
         {
-            xmin = 0;
+            xmin = .5;
             xmax = 2.5;
         }
         else if (xvar == "eta")
@@ -489,7 +489,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
     if (n == 1 && files[0].Contains("MC") && xvar == "runNumber")
     {
         placeholder(saveas,yvar == "");
-        return;
+        return 0;
     }
     if (n>=2)
     {
@@ -524,7 +524,7 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         {
             delete legend;
             placeholder(saveas,yvar == "");
-            return;
+            return 0;
         }
 
         
@@ -559,10 +559,11 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TStr
         //delete maxp;
         //delete legend;
     }
+    return c1;
 }
 
-void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,TString saveas = "")
+TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
+                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,TString saveas = "")
 {
     return trackSplitPlot(nFiles,files,names,"",var,relative,logscale,false,pull,saveas);
 }
@@ -571,9 +572,9 @@ void trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
 
 //For 1 file
 
-void trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFALSE,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                    TString saveas = "")
+TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFALSE,
+                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                     TString saveas = "")
 {
     Int_t nFiles = 0;
     if (profile)                       //it interprets nFiles < 1 as 1 file, make a scatterplot
@@ -581,20 +582,20 @@ void trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFAL
     TString *files = &file;
     TString name = "";
     TString *names = &name;
-    trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,saveas);
+    return trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,saveas);
 }
 
 //1D version
 
-void trackSplitPlot(TString file,TString var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,
-                    TString saveas = "")
+TCanvas *trackSplitPlot(TString file,TString var,
+                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,
+                     TString saveas = "")
 {
     Int_t nFiles = 1;
     TString *files = &file;
     TString name = "";
     TString *names = &name;
-    trackSplitPlot(nFiles,files,names,var,relative,logscale,pull,saveas);
+    return trackSplitPlot(nFiles,files,names,var,relative,logscale,pull,saveas);
 }
 
 void placeholder(TString saveas,Bool_t wide)
