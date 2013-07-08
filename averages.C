@@ -182,3 +182,121 @@ Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,B
     return findStatistic(RMS,file,var,axis,relative,pull);
 }
 
+
+
+
+
+void axislimits(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull,Double_t &min,Double_t &max)
+{
+    if (axis == 'x')
+    {
+        Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
+                                      && var[3] == 't' && var[4] == 's');
+        if (var == "pt")
+        {
+            min = 5;
+            max = 100;
+        }
+        else if (var == "qoverpt")
+        {
+            min = -.35;
+            max = .35;
+        }
+        else if (var == "dxy")
+        {
+            min = -10;
+            max = 10;
+        }
+        else if (var == "dz")
+        {
+            min = -25;
+            max = 25;
+        }
+        else if (var == "theta")
+        {
+            min = .5;
+            max = 2.5;
+        }
+        else if (var == "eta")
+        {
+            min = -1.2;
+            max = 1.2;
+        }
+        else if (var == "phi")
+        {
+            min = -3;
+            max = 0;
+        }
+        else if (var == "runNumber" || nHits)
+        {
+            min = findMin(nFiles,files,var,'x') - .5;
+            max = findMax(nFiles,files,var,'x') + .5;
+        }
+        else
+        {
+            cout << "No x axis limits for " << var << ".  Using average +/- 5*rms" << endl;
+            Double_t average = findAverage(nFiles,files,var,'x');
+            Double_t rms = findRMS (nFiles,files,var,'x');
+            max = TMath::Min(average + 5 * rms,findMax(nFiles,files,var,'x'));
+            min = TMath::Max(average - 5 * rms,findMin(nFiles,files,var,'x'));
+        }
+    }
+    if (axis == 'y')
+    {
+        if (pull)
+        {
+            min = -5;
+            max = 5;
+        }
+        else if (var == "pt" && relative)
+        {
+            min = -.06;
+            max = .06;
+        }
+        else if (var == "pt" && !relative)
+        {
+            min = -.8;
+            max = .8;
+        }
+        else if (var == "qoverpt")
+        {
+            min = -.0025;
+            max = .0025;
+        }
+        else if (var == "dxy")
+        {
+            min = -125;
+            max = 125;
+        }
+        else if (var == "dz")
+        {
+            min = -200;
+            max = 200;
+        }
+        else if (var == "theta")
+        {
+            min = -.005;
+            max = .005;
+        }
+        else if (var == "eta")
+        {
+            min = -.003;
+            max = .003;
+        }
+        else if (var == "phi")
+        {
+            min = -.002;
+            max = .002;
+        }
+        else
+        {
+            cout << "No y axis limits for " << var << ".  Using average +/- 5 * rms." << endl;
+            Double_t average = 0 /*findAverage(nFiles,files,var,'y',relative,pull)*/;
+            Double_t rms = findRMS (nFiles,files,var,'y',relative,pull);
+            min = TMath::Max(TMath::Max(-TMath::Abs(average) - 5*rms,
+                             findMin(nFiles,files,var,'y',relative,pull)),
+                             -findMax(nFiles,files,var,'y',relative,pull));
+            max = -min;
+        }
+    }
+}

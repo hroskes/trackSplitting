@@ -5,11 +5,20 @@ using namespace std;
 //relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
 //relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
 
-void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
+
+//The other version of the function generates c1old automatically with tracksplitplot
+//This one is faster if you want to use the same results twice,
+//for example to save the original tracksplitplot
+//or to draw both the fits and the parameter vs. misalignment plot
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                             TString saveas = "")
 {
+    if (c1old == 0) return;
+    c1old = (TCanvas*)c1old->Clone();
+    if (misalignment == "" || yvar == "") return;
     Bool_t drawfits = (parameter < 0);
     if (parameter < 0)
         parameter = -parameter - 1;   //-1 --> 0, -2 --> 1, -3 --> 2, ...
@@ -17,7 +26,6 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t 
     TString parameterunits = nPart(2,parametername);
     if (parameterunits != "")
         yaxislabel.Append(" (").Append(parameterunits).Append(")");
-    TCanvas *c1old = trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,"");
     TList *list = c1old->GetListOfPrimitives();
     int n = list->GetEntries() - 2;
 
@@ -30,14 +38,14 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t 
         tdrStyle->SetPadRightMargin(0.115);
     }
 
+    TGraphErrors *g = 0;
     TH1 **p = new TH1*[n];
     TF1 **f = new TF1*[n];
-    f[0] = function;
     for (Int_t i = 0; i < n; i++)
     {
         p[i] = (TH1*)list->At(i+1);
         p[i]->SetDirectory(0);
-        if (i == 0)
+        if (xvar == "")
             continue;
         stringstream s;
         s << function->GetName() << i;
@@ -118,7 +126,9 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t 
     }
     else
     {
-        TGraphErrors *g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
+        if (values == 0) return;
+
+        g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
 
         g->GetXaxis()->SetTitle(misalignment);
         yaxislabel.Append("   [");
@@ -147,14 +157,26 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t 
         for (int i = 0; i < nFiles; i++)
         {
             //delete p[i];
-            //delete g[i];
+            if (xvar != "")
+                delete f[i];
         }
-        //delete list;
-        //delete maxp;
-        //delete legend;
+        delete g;
+        delete[] p;
+        delete[] f;
     }
+    delete c1old;
 }
 
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
+                            TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
+                            Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                            TString saveas = "")
+{
+    misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,""),
+                           nFiles,names,values,misalignment,xvar,yvar,
+                           function,parameter,parametername,functionname,
+                           relative,logscale,resolution,pull,saveas);
+}
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
@@ -165,135 +187,133 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t 
     misalignmentDependence(nFiles,files,names,values,misalignment,xvar,yvar,f,parameter,parametername,functionname,relative,logscale,resolution,pull,saveas);
 }
 
-
-void misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
-                            Bool_t drawfits = true,
-                            Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                            TString saveas = "")
+Bool_t misalignmentDependence(TCanvas *c1old,
+                              Int_t nFiles,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
+                              Bool_t drawfits = true,
+                              Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                              TString saveas = "")
 {
-    bool works = false;
     if (xvar == "")
-        return misalignmentDependence(nFiles,files,names,values,misalignment,xvar,yvar,(TF1*)0,0,"","",relative,logscale,resolution,pull,saveas);
+    {
+        misalignmentDependence(c1old,nFiles,names,values,misalignment,xvar,yvar,(TF1*)0,0,"","",relative,logscale,resolution,pull,saveas);
+        return true;
+    }
+    TF1 *f;
+    TString parametername = "";
+    TString functionname = "";
+    Int_t parameter = 9999;
     if (misalignment == "sagitta")
     {
         if (xvar == "phi" && yvar == "phi" && !resolution && !pull)
         {
-            TF1 *f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
             f->FixParameter(1,1);
             f->FixParameter(2,-TMath::Pi()/2);
-            TString parametername = "A";
-            TString functionname = "#Delta#phi=-Acos(#phi_{org})";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A";
+            functionname = "#Delta#phi=-Acos(#phi_{org})";
+            parameter = 0;
         }
+        /*
+        Neither of these fits work.  It's kind of like sin(2x) but not exactly.
         if (xvar == "phi" && yvar == "phi" && !resolution && pull)
         {
-            TF1 *f = new TF1("sine","[0]*sin([1]*x+[2])");
-            f->FixParameter(1,-2);
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f->FixParameter(1,2);
             f->FixParameter(2,0);
-            //f->SetParameters(1,1,0);
-            TString parametername = "A";
-            TString functionname = "#Delta#phi/#delta(#Delta#phi)=-Asin(2#phi_{org})";
-            Int_t parameter = 0;
-            works = true;
+            //f->FixParameter(1,1);
+            //f->FixParameter(2,-TMath::Pi()/2);
+            parametername = "A";
+            functionname = "#Delta#phi/#delta(#Delta#phi)=Asin(2#phi_{org})";
+            //functionname = "#Delta#phi/#delta(#Delta#phi)=-Acos(#phi_{org})";
+            parameter = 0;
         }
+        */
         if (xvar == "theta" && yvar == "theta" && !resolution && pull)
         {
-            TF1 *f = new TF1("line","-[0]*(x+[1])");
+            f = new TF1("line","-[0]*(x+[1])");
             f->FixParameter(1,-TMath::Pi()/2);
-            TString parametername = "A";
-            TString functionname = "#Delta#theta/#delta(#Delta#theta)=-A(#theta_{org}-#pi/2)";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A";
+            functionname = "#Delta#theta/#delta(#Delta#theta)=-A(#theta_{org}-#pi/2)";
+            parameter = 0;
         }
         if (xvar == "theta" && yvar == "theta" && !resolution && !pull)
         {
-            TF1 *f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
             f->FixParameter(1,2);
             f->FixParameter(2,0);
-            TString parametername = "A";
-            TString functionname = "#Delta#theta=-Asin(2#theta_{org})";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A";
+            functionname = "#Delta#theta=-Asin(2#theta_{org})";
+            parameter = 0;
         }
     }
     if (misalignment == "elliptical")
     {
         if (xvar == "phi" && yvar == "dxy" && !resolution && !pull)
         {
-            TF1 *f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
             f->FixParameter(1,-2);
             f->FixParameter(2,0);
-            TString parametername = "A;#mum";
-            TString functionname = "#Deltadxy=-Asin(2#phi_{org})";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A;#mum";
+            functionname = "#Deltadxy=-Asin(2#phi_{org})";
+            parameter = 0;
         }
         if (xvar == "phi" && yvar == "dxy" && !resolution && pull)
         {
-            TF1 *f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
             f->FixParameter(1,-2);
             f->FixParameter(2,0);
-            TString parametername = "A";
-            TString functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org})";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A";
+            functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org})";
+            parameter = 0;
         }
         if (xvar == "theta" && yvar == "dz" && !resolution && !pull)
         {
-            TF1 *f = new TF1("line","-[0]*(x-[1])");
+            f = new TF1("line","-[0]*(x-[1])");
             f->FixParameter(1,TMath::Pi()/2);
-            TString parametername = "A;#mum";
-            TString functionname = "#Deltadz=-A(#theta_{org}-#pi/2)";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A;#mum";
+            functionname = "#Deltadz=-A(#theta_{org}-#pi/2)";
+            parameter = 0;
         }
         if (xvar == "theta" && yvar == "dz" && !resolution && pull)
         {
-            TF1 *f = new TF1("line","-[0]*(x-[1])");
+            f = new TF1("line","-[0]*(x-[1])");
             f->FixParameter(1,TMath::Pi()/2);
-            TString parametername = "A";
-            TString functionname = "#Deltadz/#delta(#Deltadz)=-A(#theta_{org}-#pi/2)";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A";
+            functionname = "#Deltadz/#delta(#Deltadz)=-A(#theta_{org}-#pi/2)";
+            parameter = 0;
         }
         if (xvar == "dxy" && yvar == "phi" && !resolution && !pull)
         {
-            TF1 *f = new TF1("line","-[0]*(x-[1])");
+            f = new TF1("line","-[0]*(x-[1])");
             f->FixParameter(1,0);
-            TString parametername = "A;cm^{-1}";
-            TString functionname = "#Delta#phi=-Adxy_{org}";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A;cm^{-1}";
+            functionname = "#Delta#phi=-Adxy_{org}";
+            parameter = 0;
         }
         if (xvar == "dxy" && yvar == "phi" && !resolution && pull)
         {
-            TF1 *f = new TF1("line","-[0]*(x-[1])");
+            f = new TF1("line","-[0]*(x-[1])");
             f->FixParameter(1,0);
-            TString parametername = "A;cm^{-1}";
-            TString functionname = "#Delta#phi/#delta(#Delta#phi)=-Adxy_{org}";
-            Int_t parameter = 0;
-            works = true;
+            parametername = "A;cm^{-1}";
+            functionname = "#Delta#phi/#delta(#Delta#phi)=-Adxy_{org}";
+            parameter = 0;
         }
     }
-    if (!works)
-    {
-        cout << "There is no default function to fit for this misalignment and these variables." << endl;
-        return;
-    }
+    if (functionname == "") return false;
     if (drawfits)
         parameter = -parameter-1;
-    misalignmentDependence(nFiles,files,names,values,misalignment,xvar,yvar,
+    misalignmentDependence(c1old,nFiles,names,values,misalignment,xvar,yvar,
                            f,parameter,parametername,functionname,relative,logscale,resolution,pull,saveas);
+    return true;
     
 }
 
-/*
-void plotwithfit(Int_t nFiles,TString *files,Double_t *values,TString misalignment,TString xvar,TString yvar,
-                 Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                 TString saveas = "")
+Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
+                              Bool_t drawfits = true,
+                              Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                              TString saveas = "")
 {
-    if (xvar == "")
-        
+    return misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,""),
+                                  nFiles,names,values,misalignment,xvar,yvar,
+                                  drawfits,relative,logscale,resolution,pull,saveas);
 }
-*/
