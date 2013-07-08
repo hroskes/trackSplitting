@@ -8,7 +8,7 @@ using namespace std;
 
 //The other version of the function generates c1old automatically with tracksplitplot
 //This one is faster if you want to use the same results twice,
-//for example to save the original tracksplitplot
+//for example to save the original trackSplitPlot
 //or to draw both the fits and the parameter vs. misalignment plot
 void misalignmentDependence(TCanvas *c1old,
                             Int_t nFiles,TString *names,Double_t *values,TString misalignment,TString xvar,TString yvar,
