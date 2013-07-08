@@ -21,7 +21,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if ((x != 4 || y != 3) && (x != 2 || y != 5) && (x != 5 || y != 4)) continue;
+                if (false) continue;
                 if (y + ysize*x + 1 < min || y + ysize*x + 1 > max) continue;
 
                 if (x == 9 && y == 8)
