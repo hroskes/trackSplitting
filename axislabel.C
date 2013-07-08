@@ -60,7 +60,12 @@ TString axislabel(TString variable, Char_t axis, Bool_t relative = kFALSE, Bool_
     if (relative || (axis == 'x' && variable != "runNumber" && !nHits))
         s << "_{org}";
     if (pull && axis == 'y')
-        s << " / #delta(#Delta" << fancyname(variable) << ")";
+    {
+        s << " / #delta(#Delta" << fancyname(variable);
+        if (relative)
+            s << " / " << fancyname(variable) << "_{org}";
+        s << ")";
+    }
     if (resolution && axis == 'y')
         s << ")";
     if (((!relative && !pull) || axis == 'x') && units(variable,axis) != "")

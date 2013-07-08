@@ -58,12 +58,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         tdrStyle->SetPadRightMargin(0.115);
     }
 
-    if (relative && pull)
-    {
-        placeholder(saveas,true);
-        return 0;
-    }
-
     Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'
                                    && xvar[3] == 't' && xvar[4] == 's');
 
@@ -86,7 +80,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     TH1 **p = new TH1*[n];
     Int_t lengths[n];
 
-    stringstream sx,sy,srel,ssigma1,ssigma2;
+    stringstream sx,sy,srel,ssigma1,ssigma2,ssigmaorg;
 
     sx << xvar << "_org";
     TString xvariable = sx.str();
@@ -118,6 +112,11 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     }
     sigma1variable = ssigma1.str();
     sigma2variable = ssigma2.str();
+
+    TString sigmaorgvariable = "";
+    if (pull && relative)
+        ssigmaorg << yvar << "Err_org";
+    sigmaorgvariable = ssigmaorg.str();
 
 
     Double_t xmin = -1,xmax = 1,ymin = -1,ymax = 1;
@@ -167,7 +166,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             continue;
         }
 
-        Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+        Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1,           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+                                                  sigmaorg = 0;
         Int_t xint = 0, xint2 = 0;
         Int_t runNumber = 0;
 
@@ -196,6 +196,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             tree->SetBranchAddress(sigma1variable,&sigma1);
             tree->SetBranchAddress(sigma2variable,&sigma2);
         }
+        if (relative && pull)
+            tree->SetBranchAddress(sigmaorgvariable,&sigmaorg);
    
         Int_t notincluded = 0;
 
@@ -215,8 +217,13 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             {
                 rel = x;
             }
-            y /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));        //  If !relative, rel == 1 from before
-                                                                         //  If !pull, we want to divide by sqrt(2) because we want the error from 1 track
+            Double_t error = 0;
+            if (relative && pull)
+                error = sqrt((sigma1/rel)*(sigma1/rel) + (sigma2/rel)*(sigma2/rel) + (sigmaorg*y/(rel*rel))*(sigmaorg*x/(rel*rel)));
+            else
+                error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = sqrt(2) if !pull, to get the error in 1 track
+            y /= (rel * error);
+
             if (logscale)
                 y = fabs(y);
             if (ymin <= y && y < ymax && xmin <= x && x < xmax)

@@ -13,7 +13,8 @@ using namespace std;
 
 Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
 {
-    Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1;           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+    Double_t x = 0, rel = 1, sigma1 = 1, sigma2 = 1,           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
+                             sigmaorg = 0;                     //sigmaorg is for when relative && pull
     Int_t xint = 0, xint2 = 0;                                 //xint is for integer variables like runNumber and nHits.  xint2 is for nHits.
      Int_t runNumber = 0;
 
@@ -35,7 +36,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
                                   && var[3] == 't' && var[4] == 's');
 
-    stringstream sx,srel,ssigma1,ssigma2;
+    stringstream sx,srel,ssigma1,ssigma2,ssigmaorg;
 
     if (axis == 'y')
         sx << "Delta_";
@@ -62,6 +63,10 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     }
     TString sigma1variable = ssigma1.str();
     TString sigma2variable = ssigma2.str();
+
+    if (pull && relative)
+        ssigmaorg << var << "Err_org";
+    TString sigmaorgvariable = ssigmaorg.str();
 
     if (!relative && !pull && (variable == "Delta_dxy" || variable == "Delta_dz"))
         rel = 1e-4;                                           //it's in cm but we want um
@@ -92,6 +97,8 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
             tree->SetBranchAddress(sigma1variable,&sigma1);
             tree->SetBranchAddress(sigma2variable,&sigma2);
         }
+        if (relative && pull)
+            tree->SetBranchAddress(sigmaorgvariable,&sigmaorg);
 
         for (Int_t i = 0; i<length; i++)
         {
@@ -103,7 +110,14 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
             if (runNumber < minrun || (runNumber > maxrun && maxrun > 0)) continue;
             
             totallength++;
-            x /= (rel * sqrt(sigma1 * sigma1 + sigma2 * sigma2));
+
+            Double_t error;
+            if (relative && pull)
+                error = sqrt((sigma1/rel)*(sigma1/rel) + (sigma2/rel)*(sigma2/rel) + (sigmaorg*x/(rel*rel))*(sigmaorg*x/(rel*rel)));
+            else
+                error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = 1 if axis == 'x' && !pull
+                                                                   // = sqrt(2) if axis == 'y' && !pull, to get the error in 1 track
+            x /= (rel * error);
             if (what == Minimum && x < result)
                 result = x;
             if (what == Maximum && x > result)
