@@ -26,7 +26,8 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TStr
     outFileName.ReplaceAll(".root","_wDiffs.root");
   }
 
-  TTree* ch=(TTree*)fin->Get("cosmicValidation/splitterTree"); 
+  fin->cd("cosmicValidation");
+  TTree* ch=(TTree*)fin->Get("splitterTree"); 
 
   if (ch==0x0){
     cout << "ERROR: no tree found" << endl;

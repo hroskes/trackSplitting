@@ -20,9 +20,9 @@ void saveplot(TCanvas *c1,TString saveas);
 //relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
 //relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
 
-const Int_t nColors = 13;
-Color_t colors[nColors] = {1,2,4,3,kMagenta,kCyan,kYellow,
-                           kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
+const Int_t nColors = 15;
+Color_t colors[nColors] = {1,2,3,4,6,7,8,9,5,
+                          kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
 
 Int_t binsScatterPlotx = 1000;
 Int_t binsScatterPloty = 1000;

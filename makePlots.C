@@ -90,11 +90,14 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                     ss[i] << directory << slashstring << plotnames[i] << "." << pullstring 
                           << xvarstring << yvarstring << relativestring << ".pngepsroot";
                     s[i] = ss[i].str();
-                    TString wrongway = misalignment;
-                    TString rightway = misalignment;
-                    wrongway.Append (".pull");
-                    rightway.Prepend("pull.");
-                    s[i].ReplaceAll(wrongway,rightway);
+                    if (misalignment != "")
+                    {
+                        TString wrongway = misalignment;
+                        TString rightway = misalignment;
+                        wrongway.Append (".pull");
+                        rightway.Prepend("pull.");
+                        s[i].ReplaceAll(wrongway,rightway);
+                    }
                 }
 
                 Int_t i;

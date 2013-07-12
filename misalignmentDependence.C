@@ -27,7 +27,7 @@ void misalignmentDependence(TCanvas *c1old,
     if (parameterunits != "")
         yaxislabel.Append(" (").Append(parameterunits).Append(")");
     TList *list = c1old->GetListOfPrimitives();
-    int n = list->GetEntries() - 2;
+    int n = list->GetEntries() - 2 - (xvar == "");
 
     TStyle *tdrStyle = setTDRStyle();
     tdrStyle->SetOptStat(0);
@@ -43,7 +43,10 @@ void misalignmentDependence(TCanvas *c1old,
     TF1 **f = new TF1*[n];
     for (Int_t i = 0; i < n; i++)
     {
-        p[i] = (TH1*)list->At(i+1);
+        //if (xvar == "")
+        //    p[i] = (TH1*)list->At(i+2);
+        //else
+            p[i] = (TH1*)list->At(i+1+(xvar == ""));
         p[i]->SetDirectory(0);
         if (xvar == "")
             continue;
@@ -70,6 +73,7 @@ void misalignmentDependence(TCanvas *c1old,
                 result[i] = p[i]->GetRMS();
                 error[i]  = p[i]->GetRMSError();
             }
+            cout << result[i] << " +/- " << error[i] << endl;
         }
     }
     else
@@ -131,9 +135,12 @@ void misalignmentDependence(TCanvas *c1old,
         g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
 
         g->GetXaxis()->SetTitle(misalignment);
-        yaxislabel.Append("   [");
-        yaxislabel.Append(functionname);
-        yaxislabel.Append("]");
+        if (xvar != "")
+        {
+            yaxislabel.Append("   [");
+            yaxislabel.Append(functionname);
+            yaxislabel.Append("]");
+        }
         g->GetYaxis()->SetTitle(yaxislabel);
 
         g->SetMarkerColor(colors[0]);
@@ -195,6 +202,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
 {
     if (xvar == "")
     {
+        if (c1old == 0 || misalignment == "" || values == 0) return false;
         misalignmentDependence(c1old,nFiles,names,values,misalignment,xvar,yvar,(TF1*)0,0,"","",relative,logscale,resolution,pull,saveas);
         return true;
     }
@@ -266,6 +274,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org})";
             parameter = 0;
         }
+        
         if (xvar == "theta" && yvar == "dz" && !resolution && !pull)
         {
             f = new TF1("line","-[0]*(x-[1])");
@@ -274,14 +283,18 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             functionname = "#Deltadz=-A(#theta_{org}-#pi/2)";
             parameter = 0;
         }
+        /*
+        doesn't work
         if (xvar == "theta" && yvar == "dz" && !resolution && pull)
         {
-            f = new TF1("line","-[0]*(x-[1])");
-            f->FixParameter(1,TMath::Pi()/2);
+            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f->FixParameter(2,-TMath::Pi()/2);
+            f->FixParameter(1,1);
             parametername = "A";
-            functionname = "#Deltadz/#delta(#Deltadz)=-A(#theta_{org}-#pi/2)";
+            functionname = "#Deltadz/#delta(#Deltadz)=Acos(#theta_{org})";
             parameter = 0;
         }
+        */
         if (xvar == "dxy" && yvar == "phi" && !resolution && !pull)
         {
             f = new TF1("line","-[0]*(x-[1])");

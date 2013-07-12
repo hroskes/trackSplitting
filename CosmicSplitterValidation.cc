@@ -13,7 +13,7 @@
 //
 // Original Author:  Nhan Tran
 //         Created:  Mon Jul 16m 16:56:34 CDT 2007
-// $Id: CosmicSplitterValidation.cc,v 1.2 2013/05/12 19:16:40 hroskes Exp $
+// $Id: CosmicSplitterValidation.cc,v 1.4 2013/05/23 22:06:42 hroskes Exp $
 //
 //
 
@@ -724,6 +724,7 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("dphi_spl", &dphi_spl_, "dphi_spl/D");
 	splitterTree_->Branch("pt1_spl", &pt1_spl_, "pt1_spl/D");
 	splitterTree_->Branch("pt2_spl", &pt2_spl_, "pt2_spl/D");
+	splitterTree_->Branch("dpt_spl", &dpt_spl_, "dpt_spl/D");
 	splitterTree_->Branch("p1_spl", &p1_spl_, "p1_spl/D");
 	splitterTree_->Branch("p2_spl", &p2_spl_, "p2_spl/D");
 	splitterTree_->Branch("dp_spl", &dp_spl_, "dp_spl/D");
