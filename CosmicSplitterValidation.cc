@@ -115,7 +115,7 @@ private:
         int    nHitsTOB1_spl_, nHitsTID1_spl_, nHitsTEC1_spl_;
         int    nHits2_spl_, nHitsPXB2_spl_, nHitsPXF2_spl_, nHitsTIB2_spl_;
         int    nHitsTOB2_spl_, nHitsTID2_spl_, nHitsTEC2_spl_;
-	// spl_it track errors
+	// split track errors
         double dxy1Err_spl_, dxy2Err_spl_;
 	double dz1Err_spl_, dz2Err_spl_;
 	double theta1Err_spl_, theta2Err_spl_;
@@ -724,7 +724,6 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("dphi_spl", &dphi_spl_, "dphi_spl/D");
 	splitterTree_->Branch("pt1_spl", &pt1_spl_, "pt1_spl/D");
 	splitterTree_->Branch("pt2_spl", &pt2_spl_, "pt2_spl/D");
-	splitterTree_->Branch("dpt_spl", &dpt_spl_, "dpt_spl/D");
 	splitterTree_->Branch("p1_spl", &p1_spl_, "p1_spl/D");
 	splitterTree_->Branch("p2_spl", &p2_spl_, "p2_spl/D");
 	splitterTree_->Branch("dp_spl", &dp_spl_, "dp_spl/D");
@@ -900,7 +899,9 @@ void CosmicSplitterValidation::beginJob()
 void CosmicSplitterValidation::endJob() {
 	
 	//std::cout << "totalTracksToAnalyzer: " << totalTracksToAnalyzer_ << std::endl;
-	std::cout << "golden: " << goldenCtr << ", two tracks: " << twoTracksCtr << ", golden+twotracks: " << goldenPlusTwoTracksCtr << ", tracks+muons cuts: " << _passesTracksPlusMuonsCuts << std::endl;
+	std::cout << "golden: " << goldenCtr << ", two tracks: " << twoTracksCtr << ", "
+                  << "golden+twotracks: " << goldenPlusTwoTracksCtr << ", "
+                  << "tracks+muons cuts: " << _passesTracksPlusMuonsCuts << std::endl;
 }
 
 bool CosmicSplitterValidation::is_gold_muon(const edm::Event& e){
