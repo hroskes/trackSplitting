@@ -15,11 +15,6 @@ using namespace std;
 void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
 
-//profile =  true:   profile
-//profile =  false:  scatter plot
-//relative = false:  xvar_org is on the x axis, Delta_yvar is on the y axis
-//relative = true:   xvar_org is on the x axis, Delta_yvar / yvar_org is on the y axis
-
 const Int_t nColors = 15;
 Color_t colors[nColors] = {1,2,3,4,6,7,8,9,5,
                           kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
@@ -29,9 +24,10 @@ Int_t binsScatterPloty = 1000;
 Int_t binsHistogram = 100;
 Int_t runNumberBins = 30;
 Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
+                                     //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
-                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                     Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                      TString saveas = "")
 {
     cout << xvar << " " << yvar << endl;
@@ -49,16 +45,19 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     const Int_t n = nFiles;
     
     TStyle *tdrStyle = setTDRStyle();
-    tdrStyle->SetOptStat(0);
+    tdrStyle->SetOptStat(0);        //for histograms, the mean and rms are included in the legend if nFiles >= 2
+                                    // if nFiles == 1, there is no legend, so they're in the statbox
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
         tdrStyle->SetOptStat(1110);
+    //for a scatterplot, this is needed to show the z axis scale
+    //for non-pull histograms or when run number is on the x axis, this is needed so that 10^-? on the right is not cut off
     if (type == ScatterPlot || (type == Histogram && !pull) || xvar == "runNumber")
     {
         tdrStyle->SetCanvasDefW(678);
         tdrStyle->SetPadRightMargin(0.115);
     }
 
-    Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'
+    Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'    //This includes nHits, nHitsTIB, etc.
                                    && xvar[3] == 't' && xvar[4] == 's');
 
     Int_t nBinsScatterPlotx = binsScatterPlotx;
@@ -136,7 +135,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         sid << "p" << i;
         TString id = sid.str();
 
+        //for a profile or resolution, it fills a histogram, q[j], for each bin, then gets the mean and width from there.
         TH1F **q = new TH1F*[nBinsProfileResolution];
+
         if (type == ScatterPlot)
             p[i] = new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPloty,ymin,ymax);
         if (type == Histogram)
@@ -154,11 +155,12 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 q[j] = new TH1F(id2,"",nBinsHistogram,ymin,ymax);
             }
         }
+        //This makes it so that it doesn't delete the histogram when it closes the file
         p[i]->SetDirectory(0);
 
         lengths[i] = tree->GetEntries();
 
-        if (files[i].Contains("MC") && xvar == "runNumber")
+        if (files[i].Contains("MC") && xvar == "runNumber")  //if it's MC data, the run number is meaningless
         {
             p[i]->SetLineColor(kWhite);
             p[i]->SetMarkerColor(kWhite);
@@ -190,7 +192,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         if (type == Profile || type == ScatterPlot || type == Resolution || type == Histogram)
             tree->SetBranchAddress(yvariable,&y);
         if (relative && xvar != yvar)                       //if xvar == yvar, setting the branch here will undo setting it to x 2 lines earlier
-            tree->SetBranchAddress(relvariable,&rel);
+            tree->SetBranchAddress(relvariable,&rel);       //this is taken care of later: rel = x;
         if (pull)
         {
             tree->SetBranchAddress(sigma1variable,&sigma1);
@@ -199,7 +201,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         if (relative && pull)
             tree->SetBranchAddress(sigmaorgvariable,&sigmaorg);
    
-        Int_t notincluded = 0;
+        Int_t notincluded = 0;                              //this counts the number that aren't in the right run range.
+                                                            //it's subtracted from lengths[i] in order to normalize the histograms
 
         for (Int_t j = 0; j<lengths[i]; j++)
         {
@@ -208,7 +211,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 x = xint;
             if (xvar == "runNumber")
                 runNumber = x;
-            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0)) 
+            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0))  //minrun and maxrun are defined in averages.C because they are used there too
             {
                 notincluded++;
                 continue;
@@ -224,8 +227,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = sqrt(2) if !pull, to get the error in 1 track
             y /= (rel * error);
 
-            if (logscale)
-                y = fabs(y);
             if (ymin <= y && y < ymax && xmin <= x && x < xmax)
             {
                 if (type == Histogram)
@@ -261,6 +262,10 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             }
 
             if (((j+1)/(int)(pow(10,(int)(log10(lengths[i]))-1)))*(int)(pow(10,(int)(log10(lengths[i]))-1)) == j + 1 || j + 1 == lengths[i])
+            //report when j+1 is a multiple of 10^x, where 10^x has 1 less digit than lengths[i]
+            // and when it's finished
+            //For example, if lengths[i] = 123456, it will print this when j+1 = 10000, 20000, etc.
+            //So it will print between 10 and 100 times: 10 when lengths[i] = 10^x and 100 when lengths[i] = 10^x - 1
             {
                 cout << j + 1 << "/" << lengths[i] << ": "; 
                 if (type == Profile || type == ScatterPlot || type == Resolution)
@@ -315,16 +320,13 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         }
         else
         {
+            p[i]->SetMarkerColor(kWhite);
             p[i]->SetMarkerStyle(1);
         }
         f->Close();
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
-    if (type == ScatterPlot || type == Profile || type == Resolution || type == OrgHistogram)
-        c1->SetLogy((Bool_t)(logscale));
-    if (type == Histogram)
-        c1->SetLogx((Bool_t)(logscale));
 
     TH1 *maxp = p[0];
     TGraphErrors *g[n];
@@ -370,7 +372,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         if (!allthesame && xvar != "runNumber")
             for (Int_t i = 0; i < n; i++)
             {
-                p[i]->Scale(1.0/lengths[i]);
+                p[i]->Scale(1.0/lengths[i]);     //This does NOT include events that are out of the run number range (minrun and maxrun).
+                                                 //It DOES include events that are out of the histogram range.
             }
         maxp = (TH1F*)p[0]->Clone("maxp");
         maxp->SetLineColor(kWhite);
@@ -463,10 +466,13 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     return c1;
 }
 
+
+//make a 1D histogram of Delta_yvar
+
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
-                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,TString saveas = "")
+                     Bool_t relative = kFALSE,Bool_t pull = kFALSE,TString saveas = "")
 {
-    return trackSplitPlot(nFiles,files,names,"",var,relative,logscale,false,pull,saveas);
+    return trackSplitPlot(nFiles,files,names,"",var,relative,false,pull,saveas);
 }
 
 
@@ -474,7 +480,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
 //For 1 file
 
 TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFALSE,
-                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                     Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                      TString saveas = "")
 {
     Int_t nFiles = 0;
@@ -483,20 +489,20 @@ TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = 
     TString *files = &file;
     TString name = "";
     TString *names = &name;
-    return trackSplitPlot(nFiles,files,names,xvar,yvar,relative,logscale,resolution,pull,saveas);
+    return trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,saveas);
 }
 
-//1D version
+//make a 1D histogram of Delta_yvar
 
 TCanvas *trackSplitPlot(TString file,TString var,
-                     Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t pull = kFALSE,
+                     Bool_t relative = kFALSE,Bool_t pull = kFALSE,
                      TString saveas = "")
 {
     Int_t nFiles = 1;
     TString *files = &file;
     TString name = "";
     TString *names = &name;
-    return trackSplitPlot(nFiles,files,names,var,relative,logscale,pull,saveas);
+    return trackSplitPlot(nFiles,files,names,var,relative,pull,saveas);
 }
 
 void placeholder(TString saveas,Bool_t wide)

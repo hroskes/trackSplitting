@@ -11,6 +11,7 @@ enum PlotType {ScatterPlot,Profile,Histogram,OrgHistogram,Resolution};
 //OrgHistogram: make a histogram of xvar_org
 //Resolution:   make a plot of (width of Delta_yvar) vs xvar_org
 
+//This just puts the variable name into a fancy format, with greek letters and subscripts
 TString fancyname(TString variable)
 {
     if (variable == "pt")
@@ -29,6 +30,7 @@ TString fancyname(TString variable)
         return variable;
 }
 
+//this gives the units, to be put in the axis label
 TString units(TString variable,Char_t axis)
 {
     if (variable == "pt")
@@ -36,7 +38,7 @@ TString units(TString variable,Char_t axis)
     if (variable == "dxy" || variable == "dz")
     {
         if (axis == 'y')
-            return "#mum";
+            return "#mum";      //in the tree, it's listed in centimeters, but in trackSplitPlot the value is divided by 1e4
         if (axis == 'x')
             return "cm";
     }
@@ -45,6 +47,8 @@ TString units(TString variable,Char_t axis)
     return "";
 }
 
+
+//this gives the full axis label, including units.  It can handle any combination of relative, resolution, and pull.
 TString axislabel(TString variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE, Bool_t pull = kFALSE)
 {
     stringstream s;
@@ -99,6 +103,11 @@ void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_
         p->GetYaxis()->SetTitle(axislabel(yvar,'y',relative,true,pull));
 }
 
+
+//This divides a string at semicolons
+//e.g. nPart(1,"a;b;c;d;e") = a
+//if part <= 0 or part > (number of semicolons + 1), it returns ""
+//It's used in misalignmentDependence.C
 TString nPart(Int_t part,TString string)
 {
     if (part <= 0) return "";

@@ -8,7 +8,6 @@ const Int_t ysize = 9;
 TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qoverpt","runNumber","nHits",""};
 TString yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
 Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
-Bool_t logscale[ysize]         = {kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
 
 void placeholders(TString directory);
 
@@ -104,30 +103,30 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 for (i = 0; i < nFiles; i++)
                 {
                     if (xvariables[x] == "" || yvariables[y] == "") continue;
-                    //delete trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],logscale[y],kFALSE,(bool)pull,s[i]); //deletes the canvas
+                    //delete trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],kFALSE,(bool)pull,s[i]); //deletes the canvas
                 }
 
                 if (xvariables[x] != "" && yvariables[y] != "")
                 {
-                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,s[i]);
-                    if (misalignmentDependence(c1,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                               true,relative[y],logscale[y],false,(bool)pull,s[i+2]))
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kFALSE,(bool)pull,s[i]);
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                               true,relative[y],false,(bool)pull,s[i+2]))
                     {
                         s[i+2].ReplaceAll(".png",".parameter.png");
-                        misalignmentDependence(c1,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                                   false,relative[y],logscale[y],false,(bool)pull,s[i+2]);
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                                   false,relative[y],false,(bool)pull,s[i+2]);
                         delete gROOT->GetListOfCanvases()->Last();
                         delete gROOT->GetListOfCanvases()->Last();
                     }
                     delete c1;
 
-                    TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kTRUE ,(bool)pull,s[i+1]);
-                    if (misalignmentDependence(c2,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                               true,relative[y],logscale[y],true,(bool)pull,s[i+3]))
+                    TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kTRUE ,(bool)pull,s[i+1]);
+                    if (misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                               true,relative[y],true,(bool)pull,s[i+3]))
                     {
                         s[i+2].ReplaceAll("/fits/profile.","/fits/parameter.profile");
-                        misalignmentDependence(c2,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                                   false,relative[y],logscale[y],true,(bool)pull,s[i+3]);
+                        misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                                   false,relative[y],true,(bool)pull,s[i+3]);
                         delete gROOT->GetListOfCanvases()->Last();
                         delete gROOT->GetListOfCanvases()->Last();
                     }
@@ -135,13 +134,13 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 }
                 else
                 {
-                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],logscale[y],kFALSE,(bool)pull,s[i]);
-                    if (misalignmentDependence(c1,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                               true,relative[y],logscale[y],false,(bool)pull,s[i+2]))
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kFALSE,(bool)pull,s[i]);
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                               true,relative[y],false,(bool)pull,s[i+2]))
                     {
                         delete gROOT->GetListOfCanvases()->Last();
-                        misalignmentDependence(c1,nFiles,names,values,misalignment,xvariables[x],yvariables[y],
-                                               true,relative[y],logscale[y],true,(bool)pull,s[i+3]);
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                                               true,relative[y],true,(bool)pull,s[i+3]);
                         delete gROOT->GetListOfCanvases()->Last();
                     }
                     delete c1;
@@ -152,77 +151,21 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
     }
 }
 
-/*
-void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory = "plots",
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory = "plots",
                Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
-    const int n = nFiles;
-    if (names == 0)
-    {
-        names = new TString[n];
-        for (int i = 0; i < n; i++)
-        {
-            stringstream s;
-            s << values[i];
-            names[i] = s.str();
-        }
-    }
-    misalign = true;
-    makePlots(nFiles,files,names,directory,min,max);
-    misalign = false;
-    int x = xsize;
-
-    TString slashstring = "";
-    if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
-
-    for (int y = 0; y < ysize; y++)
-    {
-        if (y + ysize * x + 1 < min || y + ysize * x + 1 > max) continue;
-        for (int resolution = 0; resolution < 2; resolution++)
-        {
-            for (int pull = 0; pull < 2; pull++)
-            {
-                TString plotname;
-                if (!resolution)
-                    plotname = "profile";
-                else
-                    plotname = "resolution";
-
-                TString pullstring = "";
-                if (pull) pullstring = "pull.";
-
-                TString xvarstring = misalignment;
-                xvarstring.Append(".");
-
-                TString yvarstring = yvariables[y];
-                yvarstring.Prepend("Delta_");
-
-                TString relativestring = "";
-                if (relative[y]) relativestring = ".relative";
-
-                stringstream s;
-                s << directory << slashstring << plotname << "." << pullstring
-                  << xvarstring << yvarstring << relativestring << ".pngepsroot";
-
-                misalignmentDependence(nFiles,files,values,misalignment,yvariables[y],relative[y],logscale[y],resolution,pull,s.str());
-                delete gROOT->GetListOfCanvases()->Last();
-            }
-        }
-        cout << y + ysize * x + 1 << "/" << (xsize+1)*ysize << endl;
-    }
+    makePlots(nFiles,files,names,"",(Double_t*)0,directory,
+              min,max);
 }
-*/
 
-/*
 void makePlots(TString file,TString directory = "plots", 
                Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     TString *files = &file;
-    TString name = "plot";
+    TString name = "scatterplot";
     TString *names = &name;
     makePlots(1,files,names,directory,min,max);
 }
-*/
 
 void placeholders(TString directory)
 {

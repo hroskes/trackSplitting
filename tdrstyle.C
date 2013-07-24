@@ -185,7 +185,7 @@ TStyle *setTDRStyle() {
 }
 
 
-//from http://ultrahigh.org/2007/08/making-pretty-root-color-palettes/
+//source: http://ultrahigh.org/2007/08/making-pretty-root-color-palettes/
 
 void set_plot_style(TStyle *tdrStyle)
 {
