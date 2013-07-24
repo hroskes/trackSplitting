@@ -202,13 +202,13 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 // This version allows you to use a string for the function.  It creates a TF1 using this string and uses this TF1
 
 void misalignmentDependence(TCanvas *c1old,
-                            Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                             TString saveas = "")
 {
     TF1 *f = new TF1("func",function);
-    misalignmentDependence(c1old,nFiles,files,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
 }
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
