@@ -261,7 +261,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 }
             }
 
-            if (((j+1)/(int)(pow(10,(int)(log10(lengths[i]))-1)))*(int)(pow(10,(int)(log10(lengths[i]))-1)) == j + 1 || j + 1 == lengths[i])
+            if (lengths[i] < 10 ? true : 
+                (((j+1)/(int)(pow(10,(int)(log10(lengths[i]))-1)))*(int)(pow(10,(int)(log10(lengths[i]))-1)) == j + 1 || j + 1 == lengths[i]))
             //report when j+1 is a multiple of 10^x, where 10^x has 1 less digit than lengths[i]
             // and when it's finished
             //For example, if lengths[i] = 123456, it will print this when j+1 = 10000, 20000, etc.

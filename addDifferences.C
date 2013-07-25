@@ -1,6 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TSystem.h"
 #include <iostream>
 
 using namespace std;
@@ -25,7 +26,7 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TStr
   {
     fin = TFile::Open(inputFile);
     if (fin != 0)
-      exists = fin.IsOpen();
+      exists = fin->IsOpen();
     if (exists) continue;
     gSystem->Sleep(60000);
     cout << "It's been ";
@@ -49,8 +50,11 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TStr
     outFileName.ReplaceAll(".root","_wDiffs.root");
   }
 
-  fin->cd("cosmicValidation");
-  TTree* ch=(TTree*)fin->Get("splitterTree"); 
+  TTree *ch;
+  if (fin->cd("cosmicValidation"))
+    ch=(TTree*)fin->Get("cosmicValidation/splitterTree");
+  else
+    ch=(TTree*)fin->Get("splitterTree"); 
 
   if (ch==0x0){
     cout << "ERROR: no tree found" << endl;
