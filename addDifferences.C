@@ -18,7 +18,30 @@ bool debug_=false;
 
 void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TString outFileName = "")
 {
-  TFile* fin = TFile::Open(inputFile);
+  TFile* fin = 0;
+  bool exists = false;
+
+  for (int i = 1; i <= 60*24 && !exists; i++)  //wait up to 1 day for the validation to be finished
+  {
+    fin = TFile::Open(inputFile);
+    if (fin != 0)
+      exists = fin.IsOpen();
+    if (exists) continue;
+    gSystem->Sleep(60000);
+    cout << "It's been ";
+    if (i >= 60)
+      cout << i/60 << " hour";
+    if (i >= 120)
+      cout << "s";
+    if (i % 60 != 0 && i >= 60)
+      cout << " and ";
+    if (i % 60 != 0)
+      cout << i%60 << " minute";
+    if (i % 60 >= 2)
+      cout << "s";
+    cout << endl;
+  }
+  if (!exists) return;
 
   if (outFileName == "")
   {

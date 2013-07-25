@@ -14,13 +14,34 @@ void placeholders(TString directory);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory = "plots",
                Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
+    for (Int_t i = 0; i < nFiles; i++)
+    {
+        TString test = files[i];
+        test.ReplaceAll("_wDiffs.root","");
+        if (test != files[i])   //then it's already been processed by addDifferences
+            continue;
+
+        test.ReplaceAll(".root","_wDiffs.root");
+        TFile *f = TFile::Open(test);
+        if (f != 0)                  //this has to be with 2 ifs and not with &&,
+            if (f->IsOpen())         //because otherwise when f==0 it will give an error when trying to call
+            {                        //IsOpen()
+                f->Close();
+                files[i] = test;
+            }
+        addDifferences(files[i]);
+        files[i].ReplaceAll(".root","_wDiffs.root");
+    }
+
     for (Int_t x = 0; x < xsize; x++)
     {
         for (Int_t y = 0; y < ysize; y++)
         {
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
-                if (false) continue;
+                if (false) continue;        //this line is to make it easier to do e.g. all plots involving Delta eta
+                                            //(replace false with yvariables[y] != "eta")
+
                 if (y + ysize*x + 1 < min || y + ysize*x + 1 > max) continue;
 
                 if (x == 9 && y == 8)
@@ -162,7 +183,7 @@ void makePlots(TString file,TString directory = "plots",
                Int_t min = 0, Int_t max = xsize*ysize + 100)
 {
     TString *files = &file;
-    TString name = "scatterplot";
+    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots
     TString *names = &name;
     makePlots(1,files,names,directory,min,max);
 }
