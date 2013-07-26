@@ -3,6 +3,8 @@
 #include "TString.h"
 #include "TROOT.h"
 
+#include "TStopwatch.h"
+
 const Int_t xsize = 10;
 const Int_t ysize = 9;
 
@@ -10,21 +12,22 @@ TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qover
 TString yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
 Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
 
+void deleteCanvas(TObject *canvas);
 void placeholders(TString directory);
 
 /*
         y var   pt rel  pt      eta     phi     dz      dxy     theta   q/pt    (hist)
-x var
-pt              1       2       3       4       5       6       7       8       9
-eta             10      11      12      13      14      15      16      17      18
-phi             19      20      21      22      23      24      25      26      27
-dz              28      29      30      31      32      33      34      35      36
-dxy             37      38      39      40      41      42      43      44      45
-theta           46      47      48      49      50      51      52      53      54
-q/pt            55      56      57      58      59      60      61      62      63
-run #           64      65      66      67      68      69      70      71      72
-nHits           73      74      75      76      77      78      79      80      81
-(hist)          82      83      84      85      86      87      88      89      [90]
+x var     +---------------------------------------------------------------------------
+pt        |     1       2       3       4       5       6       7       8       9
+eta       |     10      11      12      13      14      15      16      17      18
+phi       |     19      20      21      22      23      24      25      26      27
+dz        |     28      29      30      31      32      33      34      35      36
+dxy       |     37      38      39      40      41      42      43      44      45
+theta     |     46      47      48      49      50      51      52      53      54
+q/pt      |     55      56      57      58      59      60      61      62      63
+run #     |     64      65      66      67      68      69      70      71      72
+nHits     |     73      74      75      76      77      78      79      80      81
+(hist)    |     82      83      84      85      86      87      88      89      [90]
 
 min and max refer to these numbers.  For example, min = 17 and max = 19 means that it will
 make eta_org Delta_qoverpt, a histogram of eta_org, and phi_org Delta_pt relative.
@@ -48,15 +51,25 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
             {                        //IsOpen()
                 f->Close();
                 files[i] = test;
+                continue;
             }
         addDifferences(files[i]);
         files[i].ReplaceAll(".root","_wDiffs.root");
+    }
+
+    TString directorytomake = directory;
+    gSystem->mkdir(directorytomake);
+    if (misalignment != "")
+    {
+        directorytomake.Append("/fits");
+        gSystem->mkdir(directorytomake);
     }
 
     for (Int_t x = 0; x < xsize; x++)
     {
         for (Int_t y = 0; y < ysize; y++)
         {
+            TStopwatch stopwatch;
             for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
             {
                 if (false) continue;        //this line is to make it easier to do e.g. all plots involving Delta eta
@@ -156,10 +169,10 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         s[i+2].ReplaceAll(".png",".parameter.png");
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],false,(bool)pull,s[i+2]);
-                        delete gROOT->GetListOfCanvases()->Last();
-                        delete gROOT->GetListOfCanvases()->Last();
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    delete c1;
+                    deleteCanvas( c1);
 
                     TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kTRUE ,(bool)pull,s[i+1]);
                     if (misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
@@ -168,10 +181,10 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         s[i+2].ReplaceAll("/fits/profile.","/fits/parameter.profile");
                         misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],true,(bool)pull,s[i+3]);
-                        delete gROOT->GetListOfCanvases()->Last();
-                        delete gROOT->GetListOfCanvases()->Last();
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    delete c2;
+                    deleteCanvas( c2);
                 }
                 else
                 {
@@ -179,15 +192,16 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
                     {
-                        delete gROOT->GetListOfCanvases()->Last();
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]);
-                        delete gROOT->GetListOfCanvases()->Last();
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    delete c1;
+                    deleteCanvas( c1);
                 }
             }
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
+            cerr << y + ysize * x + 1 << " " << xvariables[x] << " " << yvariables[y] << " " << stopwatch.RealTime() << endl;
         }
     }
 }
@@ -222,4 +236,24 @@ void placeholders(TString directory)
     placeholder(filename.ReplaceAll("placeholder2","placeholder3"));
     */
     //keeping this space in case any more placeholders are needed in the future
+}
+
+void deleteCanvas(TObject *canvas)
+{
+    if (!canvas->InheritsFrom("TCanvas"))
+    {
+        cout << "abc" << endl;
+        delete canvas;
+        return;
+    }
+    TCanvas *c1 = (TCanvas*)canvas;
+    TList *list = c1->GetListOfPrimitives();
+    int numberlasttime = 0;
+    while (list->GetEntries() != numberlasttime)
+    {
+        numberlasttime = list->GetEntries();
+        for (int i = list->GetEntries() - 1; i > 0; i--)
+            delete list->At(i);
+    }
+    delete c1;
 }

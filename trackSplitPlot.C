@@ -330,12 +330,12 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     TCanvas *c1 = TCanvas::MakeDefCanvas();
 
     TH1 *maxp = p[0];
-    TGraphErrors *g[n];
-    TMultiGraph *list = new TMultiGraph();
     if (type == ScatterPlot)
         p[0]->Draw("COLZ");
     else if (type == Resolution || type == Profile)
     {
+        TGraphErrors *g[n];
+        TMultiGraph *list = new TMultiGraph();
         for (Int_t i = 0; i < n; i++)
         {
             if (files[i].Contains("MC") && xvar == "runNumber")
@@ -354,6 +354,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         list->Draw("AP");
         Double_t yaxismax = list->GetYaxis()->GetXmax();
         Double_t yaxismin = list->GetYaxis()->GetXmin();
+        delete list;
+        //deleting the list automatically deletes g[i]
         if (yaxismin > 0)
         {
             yaxismax += yaxismin;
@@ -458,9 +460,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         for (int i = 0; i < n; i++)
         {
             //delete p[i];
-            //delete g[i];
         }
-        //delete list;
         //delete maxp;
         //delete legend;
     }
