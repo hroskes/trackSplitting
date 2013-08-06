@@ -1,7 +1,6 @@
 #include "addDifferences.C"
 #include "misalignmentDependence.C"
 #include "TString.h"
-#include "TROOT.h"
 
 #include "TStopwatch.h"
 
@@ -12,7 +11,6 @@ TString xvariables[xsize]      = {"pt", "eta", "phi", "dz", "dxy","theta","qover
 TString yvariables[ysize]      = {"pt",   "pt",   "eta",  "phi",  "dz",   "dxy",  "theta", "qoverpt", ""};
 Bool_t relative[ysize]         = {kTRUE,  kFALSE, kFALSE, kFALSE, kFALSE, kFALSE, kFALSE,  kFALSE,    kFALSE};
 
-void deleteCanvas(TObject *canvas);
 void placeholders(TString directory);
 
 /*
@@ -37,6 +35,8 @@ make eta_org Delta_qoverpt, a histogram of eta_org, and phi_org Delta_pt relativ
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory = "plots",
                Int_t min = 1, Int_t max = xsize*ysize)
 {
+    stufftodelete->SetOwner(true);
+
     for (Int_t i = 0; i < nFiles; i++)
     {
         TString test = files[i];
@@ -49,7 +49,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
         if (f != 0)                  //this has to be with 2 ifs and not with &&,
             if (f->IsOpen())         //because otherwise when f==0 it will give an error when trying to call
             {                        //IsOpen()
-                f->Close();
+                delete f;
                 files[i] = test;
                 continue;
             }
@@ -84,24 +84,29 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 }
 
                 Int_t nPlots = nFiles+4;                     //scatterplot for each (if you uncomment it), profile, resolution, and fits for each.
-                stringstream *ss = new stringstream[nPlots];
-                TString *s = new TString[nPlots];
+                vector<TString> s;
 
                 TString slashstring = "";
                 if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
 
-                TString *plotnames = new TString[nPlots];
+                vector<TString> plotnames;
                 for (Int_t i = 0; i < nFiles; i++)
                 {
-                    plotnames[i] = names[i];
+                    plotnames.push_back(names[i]);   //this is plotnames[i]
                 }
+
+                plotnames.push_back("");             //this is plotnames[nFiles], but gets changed
                 if (yvariables[y] == "")
                     plotnames[nFiles] = "orghist";
                 else if (xvariables[x] == "")
                     plotnames[nFiles] = "hist";
                 else
                     plotnames[nFiles] = "profile";
-                plotnames[nFiles+1] = "resolution";
+
+                plotnames.push_back("resolution");   //this is plotnames[nFiles+1]
+
+                plotnames.push_back("");             //this is plotnames[nFiles+2]
+                plotnames.push_back("");             //this is plotnames[nFiles+3]
                 if (plotnames[nFiles] == "profile")
                 {
                     plotnames[nFiles+2] = ".profile";
@@ -140,9 +145,10 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
 
                 for (Int_t i = 0; i < nPlots; i++)
                 {
-                    ss[i] << directory << slashstring << plotnames[i] << "." << pullstring 
-                          << xvarstring << yvarstring << relativestring << ".pngepsroot";
-                    s[i] = ss[i].str();
+                    stringstream ss;
+                    ss << directory << slashstring << plotnames[i] << "." << pullstring 
+                       << xvarstring << yvarstring << relativestring << ".pngepsroot";
+                    s.push_back(ss.str());
                     if (misalignment != "")
                     {
                         TString wrongway = misalignment;
@@ -157,7 +163,9 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 for (i = 0; i < nFiles; i++)
                 {
                     if (xvariables[x] == "" || yvariables[y] == "") continue;
-                    //delete trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],kFALSE,(bool)pull,s[i]); //deletes the canvas
+                    //TCanvas *c1 = trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],kFALSE,(bool)pull,s[i]); //deletes the canvas
+                    //stufftodelete->Clear();
+                    //delete c1;
                 }
 
                 if (xvariables[x] != "" && yvariables[y] != "")
@@ -169,10 +177,12 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         s[i+2].ReplaceAll(".png",".parameter.png");
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],false,(bool)pull,s[i+2]);
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    deleteCanvas( c1);
+                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
+                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
 
                     TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kTRUE ,(bool)pull,s[i+1]);
                     if (misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
@@ -181,10 +191,12 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         s[i+2].ReplaceAll("/fits/profile.","/fits/parameter.profile");
                         misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],true,(bool)pull,s[i+3]);
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    deleteCanvas( c2);
+                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
+                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                 }
                 else
                 {
@@ -192,16 +204,20 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
                     {
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]);
-                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                     }
-                    deleteCanvas( c1);
+                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
+                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
                 }
             }
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
             cerr << y + ysize * x + 1 << " " << xvariables[x] << " " << yvariables[y] << " " << stopwatch.RealTime() << endl;
+            for (int i = 0; i < gDirectory->GetList()->GetEntries(); i++)
+                cerr << gDirectory->GetList()->At(i)->ClassName() << " " << ((TNamed*)gDirectory->GetList()->At(i))->GetName() << endl;
         }
     }
 }
@@ -236,24 +252,4 @@ void placeholders(TString directory)
     placeholder(filename.ReplaceAll("placeholder2","placeholder3"));
     */
     //keeping this space in case any more placeholders are needed in the future
-}
-
-void deleteCanvas(TObject *canvas)
-{
-    if (!canvas->InheritsFrom("TCanvas"))
-    {
-        cout << "abc" << endl;
-        delete canvas;
-        return;
-    }
-    TCanvas *c1 = (TCanvas*)canvas;
-    TList *list = c1->GetListOfPrimitives();
-    int numberlasttime = 0;
-    while (list->GetEntries() != numberlasttime)
-    {
-        numberlasttime = list->GetEntries();
-        for (int i = list->GetEntries() - 1; i > 0; i--)
-            delete list->At(i);
-    }
-    delete c1;
 }

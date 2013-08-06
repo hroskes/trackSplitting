@@ -144,8 +144,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
                     result += (x - average) * (x - average);
             }
         }
-        f->Close();
-        delete f;
+        delete f;         //automatically closes the file
     }
     if (nHits) totallength *= 2;
     if (what == Average) result /= totallength;

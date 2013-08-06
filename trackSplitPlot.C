@@ -12,7 +12,10 @@
 
 using namespace std;
 
-void placeholder(TString saveas = "",Bool_t wide = false);
+TList *stufftodelete = new TList();
+
+void deleteCanvas(TObject *canvas);
+TCanvas *placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
 
 const Int_t nColors = 15;
@@ -23,13 +26,14 @@ Int_t binsScatterPlotx = 1000;
 Int_t binsScatterPloty = 1000;
 Int_t binsHistogram = 100;
 Int_t runNumberBins = 30;
-Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
+Int_t binsProfileResolution = 1;     //for everything but runNumber and nHits
                                      //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
                      Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
                      TString saveas = "")
 {
+    stufftodelete->SetOwner(true);
     cout << xvar << " " << yvar << endl;
     if (xvar == "" && yvar == "")
         return 0;
@@ -44,17 +48,17 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
     const Int_t n = nFiles;
     
-    TStyle *tdrStyle = setTDRStyle();
-    tdrStyle->SetOptStat(0);        //for histograms, the mean and rms are included in the legend if nFiles >= 2
-                                    // if nFiles == 1, there is no legend, so they're in the statbox
+    setTDRStyle();
+    gStyle->SetOptStat(0);        //for histograms, the mean and rms are included in the legend if nFiles >= 2
+                                  // if nFiles == 1, there is no legend, so they're in the statbox
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
-        tdrStyle->SetOptStat(1110);
+        gStyle->SetOptStat(1110);
     //for a scatterplot, this is needed to show the z axis scale
     //for non-pull histograms or when run number is on the x axis, this is needed so that 10^-? on the right is not cut off
     if (type == ScatterPlot || (type == Histogram && !pull) || xvar == "runNumber")
     {
-        tdrStyle->SetCanvasDefW(678);
-        tdrStyle->SetPadRightMargin(0.115);
+        gStyle->SetCanvasDefW(678);
+        gStyle->SetPadRightMargin(0.115);
     }
 
     Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'    //This includes nHits, nHitsTIB, etc.
@@ -76,7 +80,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         nBinsProfileResolution = nBinsHistogram;
     }
 
-    TH1 **p = new TH1*[n];
+    vector<TH1*> p;
     Int_t lengths[n];
 
     stringstream sx,sy,srel,ssigma1,ssigma2,ssigmaorg;
@@ -136,27 +140,27 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         TString id = sid.str();
 
         //for a profile or resolution, it fills a histogram, q[j], for each bin, then gets the mean and width from there.
-        TH1F **q = new TH1F*[nBinsProfileResolution];
+        vector<TH1F*> q;
 
         if (type == ScatterPlot)
-            p[i] = new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPloty,ymin,ymax);
+            p.push_back(new TH2F(id,"",nBinsScatterPlotx,xmin,xmax,nBinsScatterPloty,ymin,ymax));
         if (type == Histogram)
-            p[i] = new TH1F(id,"",nBinsHistogram,ymin,ymax);
+            p.push_back(new TH1F(id,"",nBinsHistogram,ymin,ymax));
         if (type == OrgHistogram)
-            p[i] = new TH1F(id,"",nBinsHistogram,xmin,xmax);
+            p.push_back(new TH1F(id,"",nBinsHistogram,xmin,xmax));
         if (type == Resolution || type == Profile)
         {
-            p[i] = new TH1F(id,"",nBinsProfileResolution,xmin,xmax);
+            p.push_back(new TH1F(id,"",nBinsProfileResolution,xmin,xmax));
             for (Int_t j = 0; j < nBinsProfileResolution; j++)
             {
                 stringstream sid2;
-                sid2 << "q" << j;
+                sid2 << "q" << i << j;
                 TString id2 = sid2.str();
-                q[j] = new TH1F(id2,"",nBinsHistogram,ymin,ymax);
+                q.push_back(new TH1F(id2,"",nBinsHistogram,ymin,ymax));
             }
         }
-        //This makes it so that it doesn't delete the histogram when it closes the file
-        p[i]->SetDirectory(0);
+        stufftodelete->Add(p[i]);
+        p[i]->SetDirectory(0);     //This makes it so that it doesn't delete the histogram when it closes the file
 
         lengths[i] = tree->GetEntries();
 
@@ -164,7 +168,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         {
             p[i]->SetLineColor(kWhite);
             p[i]->SetMarkerColor(kWhite);
-            f->Close();
+            delete f;
             continue;
         }
 
@@ -309,7 +313,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 delete q[j];
             }
         }
-        delete[] q;
 
         setAxisLabels(p[i],type,xvar,yvar,relative,pull);
 
@@ -324,7 +327,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p[i]->SetMarkerColor(kWhite);
             p[i]->SetMarkerStyle(1);
         }
-        f->Close();
+        delete f;
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
@@ -334,13 +337,13 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         p[0]->Draw("COLZ");
     else if (type == Resolution || type == Profile)
     {
-        TGraphErrors *g[n];
+        vector<TGraphErrors*> g;
         TMultiGraph *list = new TMultiGraph();
         for (Int_t i = 0; i < n; i++)
         {
             if (files[i].Contains("MC") && xvar == "runNumber")
                 continue;
-            g[i] = new TGraphErrors(p[i]);
+            g.push_back(new TGraphErrors(p[i]));
             for (Int_t j = 0; j < g[i]->GetN(); j++)
             {
                 if (g[i]->GetY()[j] == 0 && g[i]->GetEY()[j] == 0)
@@ -354,8 +357,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         list->Draw("AP");
         Double_t yaxismax = list->GetYaxis()->GetXmax();
         Double_t yaxismin = list->GetYaxis()->GetXmin();
-        delete list;
-        //deleting the list automatically deletes g[i]
+        delete list;       //automatically deletes g[i]
         if (yaxismin > 0)
         {
             yaxismax += yaxismin;
@@ -379,6 +381,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                                                  //It DOES include events that are out of the histogram range.
             }
         maxp = (TH1F*)p[0]->Clone("maxp");
+        stufftodelete->Add(maxp);
         maxp->SetLineColor(kWhite);
         for (Int_t i = 1; i <= maxp->GetNbinsX(); i++)
         {
@@ -393,9 +396,10 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         p[0]->Draw("same");
     }
     TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
+    stufftodelete->Add(legend);
     if (n == 1 && files[0].Contains("MC") && xvar == "runNumber")
     {
-        placeholder(saveas,yvar == "");
+        delete placeholder(saveas,yvar == "");  //delete the TCanvas
         return 0;
     }
     if (n>=2)
@@ -430,7 +434,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         if (legend->GetListOfPrimitives()->At(0) == 0)
         {
             delete legend;
-            placeholder(saveas,yvar == "");
+            delete placeholder(saveas,yvar == "");   //delete the TCanvas
             return 0;
         }
 
@@ -454,9 +458,11 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         legend->SetFillStyle(0);
         legend->Draw();
     }
+
     if (saveas != "")
     {
         saveplot(c1,saveas);
+        stufftodelete->Clear();
         for (int i = 0; i < n; i++)
         {
             //delete p[i];
@@ -506,20 +512,21 @@ TCanvas *trackSplitPlot(TString file,TString var,
     return trackSplitPlot(nFiles,files,names,var,relative,pull,saveas);
 }
 
-void placeholder(TString saveas,Bool_t wide)
+TCanvas *placeholder(TString saveas,Bool_t wide)
 {
-    TStyle *tdrStyle = setTDRStyle();
+    setTDRStyle();
     if (wide)
-        tdrStyle->SetCanvasDefW(678);
-    TText *line1 = new TText(.5,.6,"This is a placeholder so that when there are");
-    TText *line2 = new TText(.5,.4,"4 plots per line it lines up nicely");
-    line1->SetTextAlign(22);
-    line2->SetTextAlign(22);
+        gStyle->SetCanvasDefW(678);
+    TText line1(.5,.6,"This is a placeholder so that when there are");
+    TText line2(.5,.4,"4 plots per line it lines up nicely");
+    line1.SetTextAlign(22);
+    line2.SetTextAlign(22);
     TCanvas *c1 = TCanvas::MakeDefCanvas();
-    line1->Draw();
-    line2->Draw();
+    line1.Draw();
+    line2.Draw();
     if (saveas != "")
         saveplot(c1,saveas);
+    return c1;
 }
 
 void saveplot(TCanvas *c1,TString saveas)
@@ -550,3 +557,28 @@ void saveplot(TCanvas *c1,TString saveas)
         c1->SaveAs(saveas);
     }
 }
+
+void deleteCanvas(TObject *canvas)
+{
+    if (canvas == 0) return;
+    if (!canvas->InheritsFrom("TCanvas"))
+    {
+        delete canvas;
+        return;
+    }
+    TCanvas *c1 = (TCanvas*)canvas;
+    TList *list = c1->GetListOfPrimitives();
+    list->SetOwner(true);
+    list->Clear();
+    /*
+    int numberlasttime = 0;
+    while (list->GetEntries() != numberlasttime)
+    {
+        numberlasttime = list->GetEntries();
+        for (int i = list->GetEntries() - 1; i > 0; i--)
+            delete list->At(i);
+    }
+    */
+    delete c1;
+}
+

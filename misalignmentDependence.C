@@ -31,7 +31,7 @@ void misalignmentDependence(TCanvas *c1old,
                             TString saveas = "")
 {
     if (c1old == 0) return;
-    c1old = (TCanvas*)c1old->Clone();
+    c1old = (TCanvas*)c1old->Clone("c1old");
     if (misalignment == "" || yvar == "") return;
     Bool_t drawfits = (parameter < 0);
     if (parameter < 0)
@@ -43,13 +43,13 @@ void misalignmentDependence(TCanvas *c1old,
     TList *list = c1old->GetListOfPrimitives();
     int n = list->GetEntries() - 2 - (xvar == "");
 
-    TStyle *tdrStyle = setTDRStyle();
-    tdrStyle->SetOptStat(0);
-    tdrStyle->SetOptFit(0);
+    setTDRStyle();
+    gStyle->SetOptStat(0);
+    gStyle->SetOptFit(0);
     if (!drawfits)
     {
-        tdrStyle->SetCanvasDefW(678);
-        tdrStyle->SetPadRightMargin(0.115);
+        gStyle->SetCanvasDefW(678);
+        gStyle->SetPadRightMargin(0.115);
     }
 
     TGraphErrors *g = 0;
@@ -65,6 +65,7 @@ void misalignmentDependence(TCanvas *c1old,
         s << function->GetName() << i;
         TString newname = s.str();
         f[i] = (TF1*)function->Clone(newname);
+        stufftodelete->Add(f[i]);
     }
 
     Double_t *result = new Double_t[nFiles];
@@ -106,6 +107,7 @@ void misalignmentDependence(TCanvas *c1old,
         legendtitle.Append(functionname);
         legendtitle.Append("]");
         TLegend *legend = new TLegend(.7,.7,.9,.9,legendtitle,"br");
+        stufftodelete->Add(legend);
         TString drawoption = "";
         for (int i = 0; i < nFiles; i++)
         {
@@ -143,6 +145,7 @@ void misalignmentDependence(TCanvas *c1old,
         if (values == 0) return;
 
         g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
+        stufftodelete->Add(g);
 
         g->GetXaxis()->SetTitle(misalignment);
         if (xvar != "")
@@ -174,14 +177,14 @@ void misalignmentDependence(TCanvas *c1old,
         for (int i = 0; i < nFiles; i++)
         {
             //delete p[i];
-            if (xvar != "")
-                delete f[i];
+            //if (xvar != "")
+                //delete f[i];
         }
-        delete g;
         delete[] p;
         delete[] f;
+        delete[] result;
+        delete[] error;
     }
-    delete c1old;
 }
 
 
@@ -209,6 +212,7 @@ void misalignmentDependence(TCanvas *c1old,
 {
     TF1 *f = new TF1("func",function);
     misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    delete f;
 }
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
@@ -218,6 +222,7 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 {
     TF1 *f = new TF1("func",function);
     misalignmentDependence(nFiles,files,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    delete f;
 }
 
 
@@ -355,6 +360,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
         parameter = -parameter-1;
     misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,
                            f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    delete f;
     return true;
     
 }
