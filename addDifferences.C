@@ -28,6 +28,7 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TStr
     if (fin != 0)
       exists = fin->IsOpen();
     if (exists) continue;
+    delete fin;
     gSystem->Sleep(60000);
     cout << "It's been ";
     if (i >= 60)
@@ -125,8 +126,8 @@ void addDifferences(TString inputFile="TrackSplitting_Split_Alignment.root",TStr
 
   }
 
-  fin->Close();
+  delete fin;
   evt_tree->Write("splitterTree");
-  newfile->Close();
+  delete newfile;
 
 }

@@ -57,7 +57,10 @@ void misalignmentDependence(TCanvas *c1old,
     TF1 **f = new TF1*[n];
     for (Int_t i = 0; i < n; i++)
     {
-        p[i] = (TH1*)list->At(i+1+(xvar == ""));
+        stringstream s0;
+        s0 << "p" << i;
+        TString pname = s0.str();
+        p[i] = (TH1*)list->/*At(i+1+(xvar == ""))*/FindObject(pname);
         p[i]->SetDirectory(0);
         if (xvar == "")
             continue;
@@ -90,7 +93,7 @@ void misalignmentDependence(TCanvas *c1old,
     }
     else
     {
-        for (int i = 0; i < nFiles; i++)
+        for (int i = 0; i < n; i++)
         {
             f[i]->SetLineColor(colors[i]);
             p[i]->Fit(f[i]);
@@ -109,7 +112,7 @@ void misalignmentDependence(TCanvas *c1old,
         TLegend *legend = new TLegend(.7,.7,.9,.9,legendtitle,"br");
         stufftodelete->Add(legend);
         TString drawoption = "";
-        for (int i = 0; i < nFiles; i++)
+        for (int i = 0; i < n; i++)
         {
             p[i]->Draw(drawoption);
             f[i]->Draw("same");
@@ -174,16 +177,11 @@ void misalignmentDependence(TCanvas *c1old,
     if (saveas != "")
     {
         saveplot(c1,saveas);
-        for (int i = 0; i < nFiles; i++)
-        {
-            //delete p[i];
-            //if (xvar != "")
-                //delete f[i];
-        }
         delete[] p;
         delete[] f;
         delete[] result;
         delete[] error;
+        delete c1old;
     }
 }
 

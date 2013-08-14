@@ -15,23 +15,19 @@ using namespace std;
 TList *stufftodelete = new TList();
 
 void deleteCanvas(TObject *canvas);
-TCanvas *placeholder(TString saveas = "",Bool_t wide = false);
+void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
-
-const Int_t nColors = 15;
-Color_t colors[nColors] = {1,2,3,4,6,7,8,9,5,
-                          kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
 
 Int_t binsScatterPlotx = 1000;
 Int_t binsScatterPloty = 1000;
 Int_t binsHistogram = 100;
 Int_t runNumberBins = 30;
-Int_t binsProfileResolution = 1;     //for everything but runNumber and nHits
+Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
                                      //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
-                     Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                     TString saveas = "")
+                        Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                        TString saveas = "")
 {
     stufftodelete->SetOwner(true);
     cout << xvar << " " << yvar << endl;
@@ -132,9 +128,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
     for (Int_t i = 0; i < n; i++)
     {
-        TFile *f = TFile::Open(files[i]);
-        TTree *tree = (TTree*)f->Get("splitterTree");
-
         stringstream sid;
         sid << "p" << i;
         TString id = sid.str();
@@ -153,14 +146,19 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p.push_back(new TH1F(id,"",nBinsProfileResolution,xmin,xmax));
             for (Int_t j = 0; j < nBinsProfileResolution; j++)
             {
+
                 stringstream sid2;
                 sid2 << "q" << i << j;
                 TString id2 = sid2.str();
                 q.push_back(new TH1F(id2,"",nBinsHistogram,ymin,ymax));
+
             }
         }
         stufftodelete->Add(p[i]);
-        p[i]->SetDirectory(0);     //This makes it so that it doesn't delete the histogram when it closes the file
+        p[i]->SetBit(kCanDelete,true);
+
+        TFile *f = TFile::Open(files[i]);
+        TTree *tree = (TTree*)f->Get("splitterTree");
 
         lengths[i] = tree->GetEntries();
 
@@ -169,6 +167,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p[i]->SetLineColor(kWhite);
             p[i]->SetMarkerColor(kWhite);
             delete f;
+            for (int j = 0; j < q.size(); j++)
+                delete q[j];
             continue;
         }
 
@@ -240,7 +240,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 if (type == Resolution || type == Profile)
                 {
                     int which = (p[i]->Fill(x,0)) - 1;
-                    if (which >= 0) q[which]->Fill(y);         //get which q[j] by filling p[i] (with nothing), which returns the bin number
+                    if (which >= 0 && which < q.size()) q[which]->Fill(y);         //get which q[j] by filling p[i] (with nothing), which returns the bin number
                 }
                 if (type == OrgHistogram)
                     p[i]->Fill(x);
@@ -267,9 +267,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
             if (lengths[i] < 10 ? true : 
                 (((j+1)/(int)(pow(10,(int)(log10(lengths[i]))-1)))*(int)(pow(10,(int)(log10(lengths[i]))-1)) == j + 1 || j + 1 == lengths[i]))
-            //report when j+1 is a multiple of 10^x, where 10^x has 1 less digit than lengths[i]
+            //print when j+1 is a multiple of 10^x, where 10^x has 1 less digit than lengths[i]
             // and when it's finished
-            //For example, if lengths[i] = 123456, it will print this when j+1 = 10000, 20000, etc.
+            //For example, if lengths[i] = 123456, it will print this when j+1 = 10000, 20000, ..., 120000, 123456
             //So it will print between 10 and 100 times: 10 when lengths[i] = 10^x and 100 when lengths[i] = 10^x - 1
             {
                 cout << j + 1 << "/" << lengths[i] << ": "; 
@@ -327,7 +327,8 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p[i]->SetMarkerColor(kWhite);
             p[i]->SetMarkerStyle(1);
         }
-        delete f;
+        //delete tree;
+        //delete f;
     }
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
@@ -382,6 +383,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             }
         maxp = (TH1F*)p[0]->Clone("maxp");
         stufftodelete->Add(maxp);
+        maxp->SetBit(kCanDelete,true);
         maxp->SetLineColor(kWhite);
         for (Int_t i = 1; i <= maxp->GetNbinsX(); i++)
         {
@@ -397,9 +399,12 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     }
     TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
     stufftodelete->Add(legend);
+    legend->SetBit(kCanDelete,true);
     if (n == 1 && files[0].Contains("MC") && xvar == "runNumber")
     {
-        delete placeholder(saveas,yvar == "");  //delete the TCanvas
+        placeholder(saveas,yvar == "");
+        deleteCanvas(c1);
+        stufftodelete->Clear();
         return 0;
     }
     if (n>=2)
@@ -433,8 +438,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
         if (legend->GetListOfPrimitives()->At(0) == 0)
         {
-            delete legend;
-            delete placeholder(saveas,yvar == "");   //delete the TCanvas
+            placeholder(saveas,yvar == "");
+            stufftodelete->Clear();
+            deleteCanvas(c1);
             return 0;
         }
 
@@ -462,14 +468,15 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     if (saveas != "")
     {
         saveplot(c1,saveas);
-        stufftodelete->Clear();
-        for (int i = 0; i < n; i++)
-        {
-            //delete p[i];
-        }
-        //delete maxp;
+        //for (int i = 0; i < n; i++)
+        //    delete p[i];
+        //if (type == Histogram || type == OrgHistogram)
+        //    delete maxp;
         //delete legend;
+        //stufftodelete->Clear();
     }
+    //deleteCanvas(c1);
+
     return c1;
 }
 
@@ -512,7 +519,7 @@ TCanvas *trackSplitPlot(TString file,TString var,
     return trackSplitPlot(nFiles,files,names,var,relative,pull,saveas);
 }
 
-TCanvas *placeholder(TString saveas,Bool_t wide)
+void placeholder(TString saveas,Bool_t wide)
 {
     setTDRStyle();
     if (wide)
@@ -526,7 +533,7 @@ TCanvas *placeholder(TString saveas,Bool_t wide)
     line2.Draw();
     if (saveas != "")
         saveplot(c1,saveas);
-    return c1;
+    deleteCanvas(c1);
 }
 
 void saveplot(TCanvas *c1,TString saveas)

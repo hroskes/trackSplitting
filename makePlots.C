@@ -53,6 +53,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 files[i] = test;
                 continue;
             }
+        delete f;
         addDifferences(files[i]);
         files[i].ReplaceAll(".root","_wDiffs.root");
     }
@@ -163,13 +164,20 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 for (i = 0; i < nFiles; i++)
                 {
                     if (xvariables[x] == "" || yvariables[y] == "") continue;
-                    //TCanvas *c1 = trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],kFALSE,(bool)pull,s[i]); //deletes the canvas
-                    //stufftodelete->Clear();
-                    //delete c1;
+                    //uncomment this section to make scatterplots
+                    /*
+                    trackSplitPlot(files[i],xvariables[x],yvariables[y],kFALSE,relative[y],kFALSE,(bool)pull,s[i]);
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
+                    */
                 }
 
                 if (xvariables[x] != "" && yvariables[y] != "")
                 {
+                    //make profile
                     TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kFALSE,(bool)pull,s[i]);
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
@@ -178,12 +186,13 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],false,(bool)pull,s[i+2]);
                     }
-                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
-                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
                         deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
 
+                    //make resolution plot
                     TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kTRUE ,(bool)pull,s[i+1]);
                     if (misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]))
@@ -192,14 +201,15 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                    false,relative[y],true,(bool)pull,s[i+3]);
                     }
-                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
-                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
                         deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
                 }
                 else
                 {
+                    //make histogram
                     TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],kFALSE,(bool)pull,s[i]);
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
@@ -207,11 +217,11 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]);
                     }
-                    for (int z = 0; z < stufftodelete->GetEntries(); z++)
-                        cout << stufftodelete->At(z)->ClassName() << " " << stufftodelete->At(z)->GetName() << endl;
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
                         deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
                 }
             }
             cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;

@@ -9,9 +9,13 @@
 #include "axislabel.C"
 #include "TGaxis.h"
 
+
 // tdrGrid: Turns the grid lines on (true) or off (false)
 
 void set_plot_style();
+vector<Color_t> colors;
+bool styleset = false;
+void setupcolors();
 
 /*
 void tdrGrid(bool gridOn) {
@@ -30,6 +34,8 @@ void fixOverlay() {
 
 void setTDRStyle() {
 
+  if (styleset) return;
+  styleset = true;
   // For the canvas:
   gStyle->SetCanvasBorderMode(0);
   gStyle->SetCanvasColor(kWhite);
@@ -178,6 +184,7 @@ void setTDRStyle() {
   gROOT->ForceStyle();
 
   TGaxis::SetMaxDigits(4);
+  setupcolors();
 }
 
 
@@ -194,4 +201,13 @@ void set_plot_style()
     Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
     TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
     gStyle->SetNumberContours(NCont);
+}
+
+void setupcolors()
+{
+    colors.clear();
+    Color_t array[15] = {1,2,3,4,6,7,8,9,5,
+                         kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
+    for (int i = 0; i < 15; i++)
+        colors.push_back(array[i]);
 }
