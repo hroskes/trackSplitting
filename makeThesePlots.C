@@ -24,13 +24,22 @@ void makeThesePlots()
 }
 
 /**************************************************************************
-to make a single plot, or all plots involving a single x or y variable
+to make all plots involving a single x or y variable, or both
 
    xvar = "nHits", yvar = "ptrel" - makes plots of nHits vs Delta_pt/pt_org
+                                    (4 total - profile and resolution,
+                                     of Delta_pt/pt_org and its pull
+                                     distribution)
    xvar = "all",   yvar = "pt"    - makes all plots involving Delta_pt
                                     (not Delta_pt/pt_org)
-   xvar = "",      yvar = "all"   - makes all histograms of Delta_???
+                                    (38 plots total:
+                                     histogram and pull distribution, and
+                                     their mean and width as a function
+                                     of the 9 x variables)
+   xvar = "",      yvar = "all"   - makes all histograms of all y variables
                                     (including Delta_pt/pt_org)
+                                    (16 plots total - 8 y variables,
+                                     regular and pull histograms)
 **************************************************************************/
 
 void makeThesePlots(TString xvar,TString yvar)
