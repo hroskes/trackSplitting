@@ -7,7 +7,7 @@
 //or just 1 event => no error bar
 
 void runNumberZoomed(Int_t nFiles,TString *files,TString *names,TString yvar,
-                     Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                     Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                      Int_t firstRun = -1,Int_t lastRun = -1,TString saveas = "")
 {
     Int_t tempminrun = minrun;

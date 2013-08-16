@@ -11,7 +11,7 @@ Int_t maxrun = -1;
 
 using namespace std;
 
-Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     Double_t x = 0,              //if axis == 'x', var_org goes in x; if axis == 'y', Delta_var goes in x
              rel = 1,            //if relative, var_org goes in rel.  x is divided by rel, so you get Delta_var/var_org
@@ -80,7 +80,9 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
         if (files[j].Contains("MC") && var == "runNumber")   //because then run number is meaningless
             continue;
         TFile *f = TFile::Open(files[j]);
-        TTree *tree = (TTree*)f->Get("splitterTree");
+        TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");
+        if (tree == 0)
+            tree = (TTree*)f->Get("splitterTree");
         Int_t length = tree->GetEntries();
 
         tree->SetBranchAddress("runNumber",&runNumber);
@@ -152,22 +154,22 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
     return result;
 }
 
-Double_t findAverage(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findAverage(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Average,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findMin(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMin(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Minimum,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Maximum,nFiles,files,var,axis,relative,pull);
 }
 
-Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(RMS,nFiles,files,var,axis,relative,pull);
 }
@@ -175,27 +177,27 @@ Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t rela
 
 //These functions are for 1 file
 
-Double_t findStatistic(Statistic what,TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findStatistic(Statistic what,TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(what,1,&file,var,axis,relative,pull);
 }
 
-Double_t findAverage(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findAverage(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Average,file,var,axis,relative,pull);
 }
 
-Double_t findMin(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMin(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Minimum,file,var,axis,relative,pull);
 }
 
-Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(Maximum,file,var,axis,relative,pull);
 }
 
-Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = kFALSE,Bool_t pull = kFALSE)
+Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
     return findStatistic(RMS,file,var,axis,relative,pull);
 }

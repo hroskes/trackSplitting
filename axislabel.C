@@ -49,7 +49,7 @@ TString units(TString variable,Char_t axis)
 
 
 //this gives the full axis label, including units.  It can handle any combination of relative, resolution, and pull.
-TString axislabel(TString variable, Char_t axis, Bool_t relative = kFALSE, Bool_t resolution = kFALSE, Bool_t pull = kFALSE)
+TString axislabel(TString variable, Char_t axis, Bool_t relative = false, Bool_t resolution = false, Bool_t pull = false)
 {
     stringstream s;
     if (resolution && axis == 'y')

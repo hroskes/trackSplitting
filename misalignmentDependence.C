@@ -15,10 +15,11 @@ using namespace std;
 // (3) if parameter < 0, it will draw the profile/resolution along with the fitted functions.
 //     The parameter of interest is still indicated by parameter, which is transformed to -parameter - 1.
 //     For example, -1 --> 0, -2 --> 1, -3 --> 2, ...
-//     This parameter's value and error will be in the legend.  You still need to enter parametername, and functionname,
+//     This parameter's value and error will be in the legend.  You still need to enter parametername and functionname,
 //     because they will be used for labels.
 
-//The LAST function is probably the most practical to use.
+//The LAST version of misalignmentDependence, all the way at the bottom of this file, is probably the most practical to use
+//(for all three of these).
 
 
 // The first function takes a canvas as its argument.  This canvas needs to have been produced with trackSplitPlot using
@@ -27,7 +28,7 @@ using namespace std;
 void misalignmentDependence(TCanvas *c1old,
                             Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
-                            Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     if (c1old == 0) return;
@@ -190,7 +191,7 @@ void misalignmentDependence(TCanvas *c1old,
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
-                            Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,""),
@@ -205,7 +206,7 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 void misalignmentDependence(TCanvas *c1old,
                             Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
-                            Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     TF1 *f = new TF1("func",function);
@@ -215,7 +216,7 @@ void misalignmentDependence(TCanvas *c1old,
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
-                            Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     TF1 *f = new TF1("func",function);
@@ -238,7 +239,7 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 Bool_t misalignmentDependence(TCanvas *c1old,
                               Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                               Bool_t drawfits = true,
-                              Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                              Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                               TString saveas = "")
 {
     if (xvar == "")
@@ -364,12 +365,12 @@ Bool_t misalignmentDependence(TCanvas *c1old,
 }
 
 
-//This is the most practically useful version.  It does not take a canvas, but produces it automatically and then runs
-//the previous function.
+//This is the most practically useful version.  It does not take a canvas, but produces it automatically and then determines what
+//function to fit it to.
 
 Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                               Bool_t drawfits = true,
-                              Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                              Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                               TString saveas = "")
 {
     return misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,""),

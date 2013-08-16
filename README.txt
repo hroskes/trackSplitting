@@ -43,8 +43,8 @@ root -l -n "unbinnedFits.C(\"Delta_pt\",-2.,2.,\"pt_org>20.&&pt_org<30.\")"
 trackSplitPlot.C ----
 =====================
 
-void trackSplitPlot(Char_t *file,Char_t *xvar,Char_t *yvar,Bool_t profile = kFALSE,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
+void trackSplitPlot(Char_t *file,Char_t *xvar,Char_t *yvar,Bool_t profile = false,
+                    Bool_t relative = false,Bool_t logscale = false,Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 
 Creates a profile (profile = true) or a scatter plot (profile = false) of Delta_yvar vs. xvar_org.
 xvar and yvar should be one of this list: pt, eta, phi, dxy, dz, theta, qoverpt
@@ -65,12 +65,12 @@ To run:
 
 root -l -n
 .L trackSplitPlot.C+
-trackSplitPlot("myFile_wDiffs.root","dxy","phi",kTRUE,kFALSE,kFALSE,3,3,"profile.phi_org.Delta_dxy.png")  //(for example)
+trackSplitPlot("myFile_wDiffs.root","dxy","phi",true,false,false,3,3,"profile.phi_org.Delta_dxy.png")  //(for example)
 
 
 
 void trackSplitPlot(Char_t *file,Char_t *var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t normalize = kTRUE,
+                    Bool_t relative = false,Bool_t logscale = false,Bool_t normalize = true,
                     Double_t cut = 3,Char_t *saveas = "")
 
 Creates a 1D histogram for Delta_var.  If relative = true, the histogram is for Delta_var / var_org.
@@ -83,11 +83,11 @@ To run:
 
 root -l -n
 .L trackSplitPlot.C+
-trackSplitPlot("myFile_wDiffs.root","dz",kFALSE,kFALSE,kFALSE,3,3,"hist.Delta_dz.png")  //(for example)
+trackSplitPlot("myFile_wDiffs.root","dz",false,false,false,3,3,"hist.Delta_dz.png")  //(for example)
 
 
 void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *xvar,Char_t *yvar,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,
+                    Bool_t relative = false,Bool_t logscale = false,
                     Double_t xcut = 10,Double_t ycut = 3,Char_t *saveas = "")
 
 Creates multiple profiles or histograms on the same canvas.
@@ -97,7 +97,7 @@ files contains filenames, and names are labels that go in the legend.
 The rest of the parameters are explained the first trackSplitPlot()
 There are enough colors in the list for it to work with nFiles up to 13, but
  long before that it would be impossible to see anything.
-If xvar = "", it runs trackSplitPlot(nFiles,files,names,yvar,relative,logscale,kTRUE,ycut,saveas)
+If xvar = "", it runs trackSplitPlot(nFiles,files,names,yvar,relative,logscale,true,ycut,saveas)
 
 To run:
 root -l -n
@@ -106,12 +106,12 @@ Char_t *files[3] = {"TrackSplitting_Alignment_Split1_wDiffs.root",
                     "TrackSplitting_Alignment_Split2_wDiffs.root",
                     "TrackSplitting_Alignment_Split3_wDiffs.root"}
 Char_t *names[3] = {"split1","split2","split3"}
-trackSplitPlot(3,files,names,"phi","pt",kFALSE,kFALSE,3,10,"profile.phi_org.Delta_pt.png")  //(for example)
+trackSplitPlot(3,files,names,"phi","pt",false,false,3,10,"profile.phi_org.Delta_pt.png")  //(for example)
 
 
 
 void trackSplitPlot(Int_t nFiles,Char_t **files,Char_t **names,Char_t *var,
-                    Bool_t relative = kFALSE,Bool_t logscale = kFALSE,Bool_t normalize = kTRUE,
+                    Bool_t relative = false,Bool_t logscale = false,Bool_t normalize = true,
                     Double_t cut = 3,Char_t *saveas = "")
 
 Creates multiple histograms, like in the second trackSplitPlot(), from multiple files on the same canvas.
@@ -124,7 +124,7 @@ Char_t *files[3] = {"TrackSplitting_Alignment_Split1_wDiffs.root",
                     "TrackSplitting_Alignment_Split2_wDiffs.root",
                     "TrackSplitting_Alignment_Split3_wDiffs.root"}
 Char_t *names[3] = {"split1","split2","split3"}
-trackSplitPlot(3,files,names,"phi",kFALSE,kFALSE,kTRUE,3,"hist.Delta_phi.png")  //(for example)
+trackSplitPlot(3,files,names,"phi",false,false,true,3,"hist.Delta_phi.png")  //(for example)
 
 
 ================
@@ -136,9 +136,9 @@ void makePlots(Char_t *file,TString directory = "plots",Double_t *xcut = xcutdef
 
 Creates a profile for each of the possible choices for the x axis and y axis,
   and a histogram for each of the yvar choices, using trackSplitPlot().
-The profiles for yvar = dxy, dz, eta, theta, q/pt, and phi are created with relative = kFALSE.
-For yvar = pt, 2 profiles are created for each possible xvar, one with relative = kTRUE
-   and one with relative = kFALSE.
+The profiles for yvar = dxy, dz, eta, theta, q/pt, and phi are created with relative = false.
+For yvar = pt, 2 profiles are created for each possible xvar, one with relative = true
+   and one with relative = false.
 For xvar, the different plots are dxy, dz, eta, theta, q/pt, phi, pt, and "" (for the histogram)
 So the total is 56 profiles and 8 histograms.
 makePlots can also make scatterplots, but that line is currently commented.

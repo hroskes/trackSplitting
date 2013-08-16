@@ -13,7 +13,7 @@
 //
 // Original Author:  Nhan Tran
 //         Created:  Mon Jul 16m 16:56:34 CDT 2007
-// $Id: CosmicSplitterValidation.cc,v 1.6 2013/07/24 13:02:09 hroskes Exp $
+// $Id: CosmicSplitterValidation.cc,v 1.7 2013/07/25 13:05:25 hroskes Exp $
 //
 //
 
@@ -709,28 +709,20 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("dcaZ2_spl", &dcaZ2_spl_, "dcaZ2_spl/D");
 	splitterTree_->Branch("dxy1_spl", &dxy1_spl_, "dxy1_spl/D");
 	splitterTree_->Branch("dxy2_spl", &dxy2_spl_, "dxy2_spl/D");
-	splitterTree_->Branch("ddxy_spl", &ddxy_spl_, "ddxy_spl/D");
 	splitterTree_->Branch("dz1_spl", &dz1_spl_, "dz1_spl/D");
 	splitterTree_->Branch("dz2_spl", &dz2_spl_, "dz2_spl/D");
-	splitterTree_->Branch("ddz_spl", &ddz_spl_, "ddz_spl/D");
 	splitterTree_->Branch("theta1_spl", &theta1_spl_, "theta1_spl/D");
 	splitterTree_->Branch("theta2_spl", &theta2_spl_, "theta2_spl/D");
-	splitterTree_->Branch("dtheta_spl", &dtheta_spl_, "dtheta_spl/D");
 	splitterTree_->Branch("eta1_spl", &eta1_spl_, "eta1_spl/D");
 	splitterTree_->Branch("eta2_spl", &eta2_spl_, "eta2_spl/D");
-	splitterTree_->Branch("deta_spl", &deta_spl_, "deta_spl/D");
 	splitterTree_->Branch("phi1_spl", &phi1_spl_, "phi1_spl/D");
 	splitterTree_->Branch("phi2_spl", &phi2_spl_, "phi2_spl/D");
-	splitterTree_->Branch("dphi_spl", &dphi_spl_, "dphi_spl/D");
 	splitterTree_->Branch("pt1_spl", &pt1_spl_, "pt1_spl/D");
 	splitterTree_->Branch("pt2_spl", &pt2_spl_, "pt2_spl/D");
-        splitterTree_->Branch("dpt_spl", &dpt_spl_, "dpt_spl/D");
         splitterTree_->Branch("p1_spl", &p1_spl_, "p1_spl/D");
 	splitterTree_->Branch("p2_spl", &p2_spl_, "p2_spl/D");
-	splitterTree_->Branch("dp_spl", &dp_spl_, "dp_spl/D");
 	splitterTree_->Branch("qoverpt1_spl", &qoverpt1_spl_, "qoverpt1_spl/D");
 	splitterTree_->Branch("qoverpt2_spl", &qoverpt2_spl_, "qoverpt2_spl/D");
-	splitterTree_->Branch("dqoverpt_spl", &dqoverpt_spl_, "dqoverpt_spl/D");
 	splitterTree_->Branch("nHits1_spl", &nHits1_spl_, "nHits1_spl/I");
 	splitterTree_->Branch("nHitsPXB1_spl", &nHitsPXB1_spl_, "nHitsPXB1_spl/I");
 	splitterTree_->Branch("nHitsPXF1_spl", &nHitsPXF1_spl_, "nHitsPXF1_spl/I");
@@ -791,6 +783,17 @@ void CosmicSplitterValidation::beginJob()
 	splitterTree_->Branch("ptErr_org", &ptErr_org_, "ptErr_org/D");
 	splitterTree_->Branch("qoverptErr_org", &qoverptErr_org_, "qoverptErr_org/D");
 
+        //put the Deltas at the end of the tree, since they're the focus of the validation.
+        //this way, if you use splitterTree->Show(), they are immediately visible
+	splitterTree_->Branch("Delta_dxy", &ddxy_spl_, "Delta_dxy/D");
+	splitterTree_->Branch("Delta_dz", &ddz_spl_, "Delta_dz/D");
+	splitterTree_->Branch("Delta_theta", &dtheta_spl_, "Delta_theta/D");
+	splitterTree_->Branch("Delta_eta", &deta_spl_, "Delta_eta/D");
+	splitterTree_->Branch("Delta_phi", &dphi_spl_, "Delta_phi/D");
+        splitterTree_->Branch("Delta_pt", &dpt_spl_, "Delta_pt/D");
+	splitterTree_->Branch("Delta_p", &dp_spl_, "Delta_p/D");
+	splitterTree_->Branch("Delta_qoverpt", &dqoverpt_spl_, "Delta_qoverpt/D");
+	
 	if (splitMuons_){
 		
 		// standalone split 
@@ -848,7 +851,7 @@ void CosmicSplitterValidation::beginJob()
 		splitterTree_->Branch("dxy2_glb", &dxy2_glb_, "dxy2_glb/D");
 		splitterTree_->Branch("ddxy_glb", &ddxy_glb_, "ddxy_glb/D");
 		splitterTree_->Branch("dz1_glb", &dz1_glb_, "dz1_glb/D");
-		splitterTree_->Branch("dz2_glb", &dz2_glb_, "dz2_glb/D");		
+		splitterTree_->Branch("dz2_glb", &dz2_glb_, "dz2_glb/D");
 		splitterTree_->Branch("ddz_glb", &ddz_glb_, "ddz_glb/D");
 		splitterTree_->Branch("theta1_glb", &theta1_glb_, "theta1_glb/D");
 		splitterTree_->Branch("theta2_glb", &theta2_glb_, "theta2_glb/D");
@@ -887,7 +890,7 @@ void CosmicSplitterValidation::beginJob()
 		splitterTree_->Branch("qoverpt2Err_glb", &qoverpt2Err_glb_, "qoverpt2Err_glb/D");
 
 	}
-	
+
 	totalTracksToAnalyzer_ = 0;
 	goldenCtr = 0;
 	twoTracksCtr = 0;

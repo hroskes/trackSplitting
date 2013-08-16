@@ -1,5 +1,5 @@
 #include "tdrstyle.C"
-#include "averages.C"
+#include "axislimits.C"
 #include "placeLegend.C"
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -26,7 +26,7 @@ Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
                                      //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
-                        Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
+                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                         TString saveas = "")
 {
     stufftodelete->SetOwner(true);
@@ -46,7 +46,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     
     setTDRStyle();
     gStyle->SetOptStat(0);        //for histograms, the mean and rms are included in the legend if nFiles >= 2
-                                  // if nFiles == 1, there is no legend, so they're in the statbox
+                                  //if nFiles == 1, there is no legend, so they're in the statbox
     if ((type == Histogram || type == OrgHistogram) && nFiles == 1)
         gStyle->SetOptStat(1110);
     //for a scatterplot, this is needed to show the z axis scale
@@ -55,6 +55,11 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     {
         gStyle->SetCanvasDefW(678);
         gStyle->SetPadRightMargin(0.115);
+    }
+    else
+    {
+        gStyle->SetCanvasDefW(600);
+        gStyle->SetPadRightMargin(0.04);
     }
 
     Bool_t nHits = (xvar[0] == 'n' && xvar[1] == 'H' && xvar[2] == 'i'    //This includes nHits, nHitsTIB, etc.
@@ -158,7 +163,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         p[i]->SetBit(kCanDelete,true);
 
         TFile *f = TFile::Open(files[i]);
-        TTree *tree = (TTree*)f->Get("splitterTree");
+        TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");
+        if (tree == 0)
+            tree = (TTree*)f->Get("splitterTree");
 
         lengths[i] = tree->GetEntries();
 
@@ -167,7 +174,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p[i]->SetLineColor(kWhite);
             p[i]->SetMarkerColor(kWhite);
             delete f;
-            for (int j = 0; j < q.size(); j++)
+            for (unsigned int j = 0; j < q.size(); j++)
                 delete q[j];
             continue;
         }
@@ -196,7 +203,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         if (type == Profile || type == ScatterPlot || type == Resolution || type == Histogram)
             tree->SetBranchAddress(yvariable,&y);
         if (relative && xvar != yvar)                       //if xvar == yvar, setting the branch here will undo setting it to x 2 lines earlier
-            tree->SetBranchAddress(relvariable,&rel);       //this is taken care of later: rel = x;
+            tree->SetBranchAddress(relvariable,&rel);       //setting the value of rel is then taken care of later: rel = x
         if (pull)
         {
             tree->SetBranchAddress(sigma1variable,&sigma1);
@@ -215,20 +222,18 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 x = xint;
             if (xvar == "runNumber")
                 runNumber = x;
-            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0))  //minrun and maxrun are defined in averages.C because they are used there too
-            {
+            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0))  //minrun and maxrun are global variables.  
+            {                                                              //they're defined in axislimits.C because they're used there too
                 notincluded++;
                 continue;
             }
             if (relative && xvar == yvar)
-            {
                 rel = x;
-            }
             Double_t error = 0;
             if (relative && pull)
                 error = sqrt((sigma1/rel)*(sigma1/rel) + (sigma2/rel)*(sigma2/rel) + (sigmaorg*y/(rel*rel))*(sigmaorg*x/(rel*rel)));
             else
-                error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = sqrt(2) if !pull, to get the error in 1 track
+                error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = sqrt(2) if !pull; this divides by sqrt(2) to get the error in 1 track
             y /= (rel * error);
 
             if (ymin <= y && y < ymax && xmin <= x && x < xmax)
@@ -240,7 +245,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 if (type == Resolution || type == Profile)
                 {
                     int which = (p[i]->Fill(x,0)) - 1;
-                    if (which >= 0 && which < q.size()) q[which]->Fill(y);         //get which q[j] by filling p[i] (with nothing), which returns the bin number
+                    //get which q[j] by filling p[i] with nothing.  (TH1F::Fill returns the bin number)
+                    //p[i]'s actual contents are set later.
+                    if (which >= 0 && (unsigned)which < q.size()) q[which]->Fill(y);
                 }
                 if (type == OrgHistogram)
                     p[i]->Fill(x);
@@ -484,7 +491,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 //make a 1D histogram of Delta_yvar
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
-                     Bool_t relative = kFALSE,Bool_t pull = kFALSE,TString saveas = "")
+                        Bool_t relative = false,Bool_t pull = false,TString saveas = "")
 {
     return trackSplitPlot(nFiles,files,names,"",var,relative,false,pull,saveas);
 }
@@ -493,9 +500,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
 
 //For 1 file
 
-TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = kFALSE,
-                     Bool_t relative = kFALSE,Bool_t resolution = kFALSE,Bool_t pull = kFALSE,
-                     TString saveas = "")
+TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = false,
+                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                        TString saveas = "")
 {
     Int_t nFiles = 0;
     if (profile)                       //it interprets nFiles < 1 as 1 file, make a scatterplot
@@ -509,8 +516,8 @@ TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = 
 //make a 1D histogram of Delta_yvar
 
 TCanvas *trackSplitPlot(TString file,TString var,
-                     Bool_t relative = kFALSE,Bool_t pull = kFALSE,
-                     TString saveas = "")
+                        Bool_t relative = false,Bool_t pull = false,
+                        TString saveas = "")
 {
     Int_t nFiles = 1;
     TString *files = &file;
@@ -524,6 +531,8 @@ void placeholder(TString saveas,Bool_t wide)
     setTDRStyle();
     if (wide)
         gStyle->SetCanvasDefW(678);
+    else
+        gStyle->SetCanvasDefW(600);
     TText line1(.5,.6,"This is a placeholder so that when there are");
     TText line2(.5,.4,"4 plots per line it lines up nicely");
     line1.SetTextAlign(22);
@@ -577,15 +586,6 @@ void deleteCanvas(TObject *canvas)
     TList *list = c1->GetListOfPrimitives();
     list->SetOwner(true);
     list->Clear();
-    /*
-    int numberlasttime = 0;
-    while (list->GetEntries() != numberlasttime)
-    {
-        numberlasttime = list->GetEntries();
-        for (int i = list->GetEntries() - 1; i > 0; i--)
-            delete list->At(i);
-    }
-    */
     delete c1;
 }
 

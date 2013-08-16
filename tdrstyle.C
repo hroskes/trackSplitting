@@ -151,7 +151,7 @@ void setTDRStyle() {
   // For the axis:
 
   gStyle->SetAxisColor(1, "XYZ");
-  gStyle->SetStripDecimals(kTRUE);
+  gStyle->SetStripDecimals(true);
   gStyle->SetTickLength(0.03, "XYZ");
   gStyle->SetNdivisions(510, "XYZ");
   gStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
@@ -175,7 +175,7 @@ void setTDRStyle() {
   // gStyle->SetPaintTextFormat(const char* format = "g");
   // gStyle->SetPalette(Int_t ncolors = 0, Int_t* colors = 0);
   // gStyle->SetTimeOffset(Double_t toffset);
-  // gStyle->SetHistMinimumZero(kTRUE);
+  // gStyle->SetHistMinimumZero(true);
 
   gStyle->SetPalette(1);
 

@@ -27,7 +27,9 @@ void unbinnedFits(TString varName="Delta_pt",
   RooRealVar pt("pt_org","p_{T}",0.0,1000.0);
 
   TFile* f =new TFile("TrackSplitting_Split_Alignment_wDiffs.root");
-  TTree* t = (TTree*) f->Get("splitterTree");
+  TTree* t = (TTree*) f->Get("cosmicValidation/splitterTree");
+  if (t == 0)
+    t = (TTree*) f->Get("splitterTree");
 
   cout << "entries: " << t->GetEntries() << endl;
 
