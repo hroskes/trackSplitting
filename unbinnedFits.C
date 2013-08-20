@@ -1,13 +1,13 @@
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
+#include "tdrstyle.C"
 using namespace RooFit;
 
 void unbinnedFits(TString varName="Delta_pt",
 		  double range_low=-10., double range_high=10.,
 		  TString cutString="pt_org>50."){
 
-//  gROOT->ProcessLine(".L ~whitbeck/tdrstyle.C");
-//  setTDRStyle();
+  setTDRStyle();
 
   TString fancyVarName = varName;
   if (varName == "Delta_pt")
