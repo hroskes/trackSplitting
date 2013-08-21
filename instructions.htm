@@ -84,9 +84,10 @@ Then open root in batch mode, and compile and execute the code:
 <p><code>root -l -b <br>
 .x makeThesePlots.C+<br>
 </code></p>
-<p>This will create 313 plots in the directory specified.
-&nbsp;The plots will be saved as png, eps, and root, so that they
+<p>This will create 313 plots in the directory specified.  The plots will each be saved as png, eps, and root, so that they
 can be used for various purposes.</p>
+<p>It is possible to run makeThesePlots.C even before the validation is finished.  It will check every minute to see whether all the files exist, and start making 
+plots when they do.  It will wait up to 24 hours, which should be more than adequate in almost every case.</p>
 <p>There are also two other versions of <code>makeThesePlots()</code>,
 so that you can make specific plots rather than all of them.</p>
 <code>makeThesePlots(Tstring xvar,TString yvar)</code>
@@ -102,7 +103,7 @@ allows you to specify which variables to make the plots with.
   <li>"qoverpt"</li>
   <li>"runNumber"</li>
   <li>"nHits"</li>
-  <li>"" -&nbsp;make a histogram of the y variable</li>
+  <li>"" - make a histogram of the y variable</li>
   <li>"all" - make plots with any x variable</li>
 </ul>
 The choices for <code>yvar</code> are:<br>
@@ -131,7 +132,7 @@ to make using a matrix of bools. &nbsp;The format of the matrix is:<br>
       <td style="background-color: rgb(255, 102, 102);">x
 variable</td>
       <td style="background-color: rgb(51, 102, 255);">y
-variables</td>
+variable</td>
       <td style="background-color: rgb(51, 102, 255);">ptrel</td>
       <td style="background-color: rgb(51, 102, 255);">pt</td>
       <td style="background-color: rgb(51, 102, 255);">eta</td>
@@ -297,3 +298,70 @@ splitting plots, is available at <code>/afs/cern.ch/user/h/hroskes/public/trackS
 <p>Some example plots can be found <a
  href="https://hroskes.web.cern.ch/hroskes/2011plots/1321/">here</a>.</p>
 
+<h1>More specific plots</h1>
+
+<p>It is also possible to use trackSplitPlot directly to make individual plots, saved with any name.  However, it requires slightly more input.</p>
+
+<code>TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar, <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false, <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TString saveas = "")</code>
+
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td>Parameter</td>
+      <td>Explanation</td>
+      <td>Other Information</td>
+    <tr>
+      <td>nFiles</td>
+      <td>The number of files used in the plots.  The files should have been produced by CosmicSplitterValidation.cc</td>
+      <td>If nFiles <= 0, then a scatterplot will be made using the first file in files, unless xvar or yvar = "", in which case nFiles <= 0 is the same as 
+          nFiles = 1</td>
+    </tr>
+    <tr>
+      <td>files</td>
+      <td>The filenames of the data files (produced by the validation)</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>names</td>
+      <td>Labels for the files, which are used in the legend</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>xvar</td>
+      <td>The x variable (chosen from the list above)</td>
+      <td>Use xvar = "" to instead make a histogram of &Delta;yvar</td>
+    </tr>
+    <tr>
+      <td>yvar</td>
+      <td>The y variable (chosen from the list above)</td>
+      <td>Use yvar = "" to instead make a histogram of xvar<sub>org</sub>.  If xvar = yvar = "", nothing will happen.</td>
+    </tr>
+    <tr>
+      <td>relative</td>
+      <td>If this is true, &Delta;yvar/yvar<sub>org</sub> is used as the y variable, instead of just &Delta;yvar.</td>
+      <td>This is most useful for yvar = "pt", because for most of the other variables, the zero of yvar<sub>org</sub> is arbitrary.  If yvar = "", this has no 
+          effect.</td>
+    </tr>
+    <tr>
+      <td>resolution</td>
+      <td>If this is true, it will plot the RMS of &Delta;yvar as a function of xvar<sub>org</sub>.</td>
+      <td>This has no effect if xvar or yvar = "", or if nFiles <= 0.</td>
+    </tr>
+    <tr>
+      <td>pull</td>
+      <td>If this is true, it will use &Delta;yvar/&delta;(&Delta;yvar) as the y variable, instead of just &Delta;yvar.</td>
+      <td>This has no effect if xvar = "".  If relative and pull are both true, relative is applied first, and so the y variable comes out to be 
+          &Delta;y/y<sub>org</sub>/&delta;(&Delta;y/y<sub>org</sub>).  However, if &Delta;y/y<sub>org</sub><<1, this simplifies to be almost exactly the same as 
+          pull without relative, and the plots are essentially identical.</td>
+    </tr>
+    <tr>
+      <td>saveas</td>
+      <td>Filename to save the resulting plot</td>
+      <td>If the filename ends with .pngepsroot, the plot will be saved three times, as .png, .eps, and .root.  For example, if saveas="plots/plot.pngepsroot", it 
+          will save it as plots/plot.png, plots/plot.eps, and plots/plot.root.
+  </tbody>
+</table>
