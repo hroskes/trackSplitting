@@ -1,0 +1,299 @@
+<html>
+<head>
+  <title>Track Splitting Instructions</title>
+</head>
+<body>
+<h1>Introduction</h1>
+<p>The track splitting validation is a validation tool that
+splits cosmic tracks in half and separately reconstructs three tracks:
+the original track and the two
+halves. This makes it possible to determine differences between the two
+tracks in various parameters, which may detect misalignments that would
+not be as obvious
+from other types of validations.</p>
+<p>The validation is run through the All-In-One validation tool.
+The validation produces a ROOT file containing a tree, which can then
+be used to make different
+plots.</p>
+<h1>Quick Start</h1>
+<h2>Run the validation</h2>
+<p>Run the validation using the All-In-One tool. The track
+splitting validation's parameters are the same as several other
+validations, like offline or Z-&gt;&mu;&mu;
+Here is a sample ini file:</p>
+<p><code>
+[general] <br>
+jobmode = lxBatch,-q cmscaf1nh <br>
+datadir =
+/afs/cern.ch/cms/CAF/CMSALCA/ALCA_TRACKERALIGN/data/commonValidation/results/$USER/
+<br>
+logdir =
+/afs/cern.ch/cms/CAF/CMSALCA/ALCA_TRACKERALIGN/data/commonValidation/results/$USER/
+<br>
+<br>
+[alignment:prompt] <br>
+globaltag = GR_P_V32::All <br>
+color = 1 <br>
+style = 1 <br>
+<br>
+[alignment:rereco] <br>
+globaltag = GR_R_53_V20::All <br>
+color = 2 <br>
+style = 2 <br>
+<br>
+[split:2012B] <br>
+maxevents = -1 <br>
+dataset = /Cosmics/Run2012B-TkAlCosmics0T-v1/ALCARECO <br>
+trackcollection = ALCARECOTkAlCosmicsCTF0T <br>
+<br>
+[validation] <br>
+split 2012B: prompt <br>
+split 2012B: rereco <br>
+</code></p>
+<p>Run the validation using:</p>
+<p><code>validateAlignments.py -c myfile.ini -N
+validationname</code></p>
+<p>The -N option is important because otherwise the validation
+name is alignmentValidation_yymmdd_hhmmss, making it difficult to
+identify the directories later.
+The results of the validation will be stored in three places:
+</p>
+<ol>
+  <li>The scripts and cfgs used to run the validation are in
+(directory where validateAlignments.py was run)/validationname</li>
+  <li>The logfiles are in logdir/validationname</li>
+  <li>The root files are on eos, in
+/store/caf/user/$USER/AlignmentValidation/validationname</li>
+</ol>
+<h2>Make plots</h2>
+<p>Copy the file makeThesePlots.C into a convenient directory.
+Edit it and fill in the blanks, which are indicated by 5 dashes:
+</p>
+<ul>
+  <li>Directory of track splitting code</li>
+  <li>Number of files</li>
+  <li>Validation name, split name, alignment name - for each root
+file to be included in the plots. The validation name is indicated by
+including "-N name"
+after validateAlignments.py, and the split and alignment names are in
+the section headers of the ini file.</li>
+  <li>Name1, name2 - these are the names to be used in the legend.</li>
+  <li>Directory to save plots</li>
+</ul>
+Then open root in batch mode, and compile and execute the code:
+<p><code>root -l -b <br>
+.x makeThesePlots.C+<br>
+</code></p>
+<p>This will create 313 plots in the directory specified.
+&nbsp;The plots will be saved as png, eps, and root, so that they
+can be used for various purposes.</p>
+<p>There are also two other versions of <code>makeThesePlots()</code>,
+so that you can make specific plots rather than all of them.</p>
+<code>makeThesePlots(Tstring xvar,TString yvar)</code>
+allows you to specify which variables to make the plots with.
+&nbsp;The choices for <code>xvar</code> are:<br>
+<ul>
+  <li>"pt"</li>
+  <li>"eta"</li>
+  <li>"phi"</li>
+  <li>"dz"</li>
+  <li>"dxy"</li>
+  <li>"theta"</li>
+  <li>"qoverpt"</li>
+  <li>"runNumber"</li>
+  <li>"nHits"</li>
+  <li>"" -&nbsp;make a histogram of the y variable</li>
+  <li>"all" - make plots with any x variable</li>
+</ul>
+The choices for <code>yvar</code> are:<br>
+<ul>
+  <li>"ptrel" - &Delta;p<sub>T</sub>/(p<sub>T</sub>)<sub>org</sub></li>
+  <li>"pt" - &Delta;p<sub>T</sub></li>
+  <li>"eta"</li>
+  <li>"phi"</li>
+  <li>"dz"</li>
+  <li>"dxy"</li>
+  <li>"theta"</li>
+  <li>"qoverpt"</li>
+  <li>"" -&nbsp;make a histogram of the x variable</li>
+  <li>"all" - make plots with any y variable</li>
+</ul>
+makeThesePlots("all","all") is equivalent to makeThesePlots().
+&nbsp;At the other extreme, makeThesePlots("","") will do nothing,
+since there is no variable to use in the plots.<br>
+<br>
+The third version gives you even more complete control over what plots
+to make using a matrix of bools. &nbsp;The format of the matrix is:<br>
+<table style="text-align: left; width: 100%;" border="1"
+ cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="background-color: rgb(255, 102, 102);">x
+variable</td>
+      <td style="background-color: rgb(51, 102, 255);">y
+variables</td>
+      <td style="background-color: rgb(51, 102, 255);">ptrel</td>
+      <td style="background-color: rgb(51, 102, 255);">pt</td>
+      <td style="background-color: rgb(51, 102, 255);">eta</td>
+      <td style="background-color: rgb(51, 102, 255);">phi</td>
+      <td style="background-color: rgb(51, 102, 255);">dz</td>
+      <td style="background-color: rgb(51, 102, 255);">dxy</td>
+      <td style="background-color: rgb(51, 102, 255);">theta</td>
+      <td style="background-color: rgb(51, 102, 255);">qoverpt</td>
+      <td style="background-color: rgb(51, 102, 255);">(histogram)</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">pt</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">eta</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">phi</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">dz</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">dxy</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td style = "background-color: rgb(102, 255, 102);">true</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">theta</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">qoverpt</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">runNumber</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">nHits</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td colspan="2" rowspan="1"
+ style="background-color: rgb(255, 102, 102);">(histogram)</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td style = "background-color: rgb(102, 255, 102);">true</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td>false</td>
+      <td style = "background-color: rgb(255,0,255);">false</td>
+    </tr>
+  </tbody>
+</table>
+<ul>
+</ul>
+<p>The matrix above, for example would be created by: <br>
+<code>bool matrix[10][9]; <br>
+for (int x = 0; x &lt; 10; x++) <br>
+&nbsp;&nbsp;&nbsp;&nbsp;for (int y = 0; y &lt; 9;
+y++) <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;matrix[x][y]
+= false; <br>
+matrix[4][3] = true; <br>
+matrix[9][3] = true;<br>
+</code>
+and would make plots of dxy<sub>org</sub>-&Delta;&phi; and histograms of &Delta;&phi;.
+This would be a total of 6 plots: the regular and pull histograms of &Delta;&phi;, and their mean and width as a function of dxy<sub>org</sub>.
+</p>
+<p>The cell indicated in pink has no effect, since there are no plots that have no x or y variable.</p>
+<p>The easiest way to view the plots is on a webpage with 4 plots
+per line. A convenient webpage script, with filters specifically
+designed for the track
+splitting plots, is available at <code>/afs/cern.ch/user/h/hroskes/public/trackSplitting/indexforplots.php</code></p>
+<p>Some example plots can be found <a
+ href="https://hroskes.web.cern.ch/hroskes/2011plots/1321/">here</a>.</p>
+
