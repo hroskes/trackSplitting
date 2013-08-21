@@ -365,3 +365,63 @@ TString saveas = "")</code>
           will save it as plots/plot.png, plots/plot.eps, and plots/plot.root.
   </tbody>
 </table>
+
+<h1>Misalignments</h1>
+
+<p>The track splitting tool can be used to discover systematic misalignments in geometries.</p>
+
+<h2>Creating misaligned geometries</h2>
+
+<p>The first step is to look at Monte Carlo data with the particular misalignment you are looking at.  Instructions on how to produce systematic misalignments can 
+be found <a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideTkAlignmentHowto#Systematic_Misalignment">here</a>, and a description of the different 
+misalignments is <a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/SystematicMisalignmentsofTracker">here</a>.
+
+<p>To use this misaligned geometry in the validation, add these lines into your ini file:</p>
+
+<code>condition TrackerAlignmentRcd sqlite_file:-----file produced by testProduceSystematicMisalignment_cfg.py-----.db, Alignments <br>
+condition TrackerAlignmentErrorRcd sqlite_file:-----file produced by testProduceSystematicMisalignment_cfg.py-----.db, AlignmentErrors</code>
+
+<h2>Misalignment plots</h2>
+
+<p>The easiest way to make misalignment plots is to use makeThesePlots.C.  In each of the three functions there, when it calls 
+<code>makePlots(nFiles,files,names,"",0,plotsdirectory...)</code>, the fourth and fifth arguments are used for misalignments.  Replace "" with the name of the 
+misalignment you want to measure (for example, "sagitta" or "elliptical").  If you are analyzing real data, leave 0 in place.  However, if you are using 
+misaligned Monte Carlo and know the magnitude of the misalignments, replace 0 with values and add this line near the top of makeThesePlots.C:</p>
+
+<code>Double_t values[nFiles] = { ... }</code>
+
+<p>Similar to names, values gives the magnitude of the misalignment for each file in files.  List these values inside the array.  They should be the same numbers 
+you used in testProduceSystematicMisalignment_cfg.py to make the misalignment.</p>
+
+<p>There will now be up to three new types of plots made:</p>
+<ul>
+  <li>If you put values in, additional plots will be created called profile.[misalignment name].Delta_[yvar] and resolution.[misalignment name].Delta_[yvar].  
+      They show the mean and width of &Delta;yvar as a function of the misalignment.</li>
+  <li>If you put the misalignment name in, depending on what it is, you may get plots in a subdirectory called fits that have certain plots fitted to a function 
+      that can be used to estimate the magnitude of the misalignment.  In the legend, you will see the equation that was fit, as well as the parameter value and 
+      error for each file.  These functions, and which plots they are relevant for are defined towards the bottom of misalignmentDependence.C; you can add more 
+      there.</li>
+  <li>If you put both the misalignment name and the values, you will also get plots that show this parameter's value as a function of the misalignment magnitude, 
+      which can be used to determine the misalignment magnitude in real data that has been fit.</li>
+</ul>
+<p>More information can be found in the comments at the top of misalignmentDependence.C.</p>
+
+<h1>Run number</h1>
+
+<p>If there seems to be something wrong with certain runs, you can limit the data used to make plots to those runs.  Global variables called minrun and maxrun are 
+defined at the top of axislimits.C.  By default, they are -1, meaning no limit.  You can add lines to makeThesePlots.C to modify these variables in order to only 
+look at certain runs.</p>
+
+<p>Additionally, you can use runNumberZoomed.C:</p>
+
+<code>
+void runNumberZoomed(Int_t nFiles,TString *files,TString *names,TString yvar, <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false, <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Int_t firstRun = -1,Int_t lastRun = -1,TString saveas = "")
+</code>
+
+<p>Most of the parameters are as described earlier.  firstrun and lastrun are the first and last runs to use.  The advantage of this function is that it zooms in 
+so that each bin refers to exactly one run.  The lower and upper edges of the x axis may not be firstRun and lastRun, because there may not be events in every 
+run.</p>
