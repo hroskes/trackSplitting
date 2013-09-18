@@ -201,7 +201,15 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 tree->SetBranchAddress(xvariable,&x);
         }
         if (type == Profile || type == ScatterPlot || type == Resolution || type == Histogram)
-            tree->SetBranchAddress(yvariable,&y);
+        {
+            int branchexists = tree->SetBranchAddress(yvariable,&y);
+            if (branchexists == -5)   //i.e. it doesn't exist
+            {
+                yvariable.ReplaceAll("Delta_","d");
+                yvariable.Append("_spl");
+                tree->SetBranchAddress(yvariable,&y);
+            }
+        }
         if (relative && xvar != yvar)                       //if xvar == yvar, setting the branch here will undo setting it to x 2 lines earlier
             tree->SetBranchAddress(relvariable,&rel);       //setting the value of rel is then taken care of later: rel = x
         if (pull)
