@@ -206,8 +206,8 @@ void set_plot_style()
 void setupcolors()
 {
     colors.clear();
-    Color_t array[15] = {1,2,3,4,6,7,8,9,5,
-                         kOrange,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
+    Color_t array[15] = {1,2,3,4,6,7,8,9,
+                         kYellow+3,kOrange+10,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
     for (int i = 0; i < 15; i++)
         colors.push_back(array[i]);
 }
