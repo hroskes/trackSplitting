@@ -246,7 +246,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
             bool ymatch = (yvar == "all" || yvar == yvariables[y]);
             if (yvar == "pt" && yvariables[y] == "pt" && relative[y] == true)
                 ymatch = false;
-            if (yvar == "ptrel" && yvariables[y] == "pt" && relative[y] == false)
+            if (yvar == "ptrel" && yvariables[y] == "pt" && relative[y] == true)
                 ymatch = true;
             matrix[x][y] = (xmatch && ymatch);
         }
