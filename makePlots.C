@@ -32,8 +32,8 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
             if (f != 0)
                 exists = f->IsOpen();
             delete f;
-            if (exists) continue;
             gSystem->Sleep(60000);
+            if (exists) continue;
             cout << "It's been ";
             if (j >= 60)
                 cout << j/60 << " hour";
