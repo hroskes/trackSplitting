@@ -417,7 +417,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     legend->SetBit(kCanDelete,true);
     if (n == 1 && files[0].Contains("MC") && xvar == "runNumber")
     {
-        placeholder(saveas,yvar == "");
         deleteCanvas(c1);
         stufftodelete->Clear();
         return 0;
@@ -453,7 +452,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
         if (legend->GetListOfPrimitives()->At(0) == 0)
         {
-            placeholder(saveas,yvar == "");
             stufftodelete->Clear();
             deleteCanvas(c1);
             return 0;
