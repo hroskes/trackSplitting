@@ -21,19 +21,19 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
 {
     stufftodelete->SetOwner(true);
 
-    for (Int_t i = 0; i < nFiles; i++)
+    for (Int_t i = 0, totaltime = 0; i < nFiles; i++)
     {
         TFile *f = 0;
         bool exists = false;
 
-        for (int j = 1; j <= 60*24 && !exists; j++)  //wait up to 1 day for the validation to be finished
+        for (int j = 1; j <= 60*24 && !exists; j++, totaltime++)  //wait up to 1 day for the validation to be finished
         {
             f = TFile::Open(files[i]);
             if (f != 0)
                 exists = f->IsOpen();
             delete f;
-            gSystem->Sleep(60000);
             if (exists) continue;
+            gSystem->Sleep(60000);
             cout << "It's been ";
             if (j >= 60)
                 cout << j/60 << " hour";
@@ -46,8 +46,10 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
             if (j % 60 >= 2)
                 cout << "s";
             cout << endl;
-          }
-          if (!exists) return;
+        }
+        if (!exists) return;
+        if (i == nFiles - 1 && totaltime > nFiles)
+            gSystem->Sleep(60000);
     }
 
     TString directorytomake = directory;
