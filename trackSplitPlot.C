@@ -130,6 +130,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         axislimits(nFiles,files,yvar,'y',relative,pull,ymin,ymax);
 
     TString meansrmss[n];
+    Bool_t  used[n];        //a file is not "used" if it's MC data and the x variable is run number
 
     for (Int_t i = 0; i < n; i++)
     {
@@ -169,8 +170,10 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 
         lengths[i] = tree->GetEntries();
 
+        used[i] = true;
         if (files[i].Contains("MC") && xvar == "runNumber")  //if it's MC data, the run number is meaningless
         {
+            used[i] = false;
             p[i]->SetLineColor(kWhite);
             p[i]->SetMarkerColor(kWhite);
             delete f;
@@ -346,29 +349,47 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         //delete f;
     }
 
+    TH1 *firstp = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (used[i])
+        {
+            firstp = p[i];
+            break;
+        }
+    }
+    if (firstp == 0)
+    {
+        stufftodelete->Clear();
+        return 0;
+    }
+
     TCanvas *c1 = TCanvas::MakeDefCanvas();
 
-    TH1 *maxp = p[0];
+    TH1 *maxp = firstp;
     if (type == ScatterPlot)
-        p[0]->Draw("COLZ");
+        firstp->Draw("COLZ");
     else if (type == Resolution || type == Profile)
     {
         vector<TGraphErrors*> g;
         TMultiGraph *list = new TMultiGraph();
-        for (Int_t i = 0; i < n; i++)
+        for (Int_t i = 0, ii = 0; i < n; i++, ii++)
         {
-            if (files[i].Contains("MC") && xvar == "runNumber")
-                continue;
-            g.push_back(new TGraphErrors(p[i]));
-            for (Int_t j = 0; j < g[i]->GetN(); j++)
+            if (!used[i])
             {
-                if (g[i]->GetY()[j] == 0 && g[i]->GetEY()[j] == 0)
+                ii--;
+                continue;
+            }
+            g.push_back(new TGraphErrors(p[i]));
+            for (Int_t j = 0; j < g[ii]->GetN(); j++)
+            {
+                if (g[ii]->GetY()[j] == 0 && g[ii]->GetEY()[j] == 0)
                 {
-                    g[i]->RemovePoint(j);
+                    g[ii]->RemovePoint(j);
                     j--;
                 }
             }
-            list->Add(g[i]);
+            list->Add(g[ii]);
         }
         list->Draw("AP");
         Double_t yaxismax = list->GetYaxis()->GetXmax();
@@ -379,8 +400,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             yaxismax += yaxismin;
             yaxismin = 0;
         }
-        p[0]->GetYaxis()->SetRangeUser(yaxismin,yaxismax);
-        p[0]->Draw("P");
+        firstp->GetYaxis()->SetRangeUser(yaxismin,yaxismax);
     }
     else if (type == Histogram || type == OrgHistogram)
     {
@@ -396,7 +416,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
                 p[i]->Scale(1.0/lengths[i]);     //This does NOT include events that are out of the run number range (minrun and maxrun).
                                                  //It DOES include events that are out of the histogram range.
             }
-        maxp = (TH1F*)p[0]->Clone("maxp");
+        maxp = (TH1F*)firstp->Clone("maxp");
         stufftodelete->Add(maxp);
         maxp->SetBit(kCanDelete,true);
         maxp->SetLineColor(kWhite);
@@ -404,52 +424,44 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         {
             for (Int_t j = 0; j < n; j++)
             {
-                if (files[j].Contains("MC") && xvar == "runNumber")
+                if (!used[j])
                     continue;
                 maxp->SetBinContent(i,TMath::Max(maxp->GetBinContent(i),p[j]->GetBinContent(i)));
             }
         }
         maxp->Draw();
-        p[0]->Draw("same");
     }
+
     TLegend *legend = new TLegend(.6,.7,.9,.9,"","br");
     stufftodelete->Add(legend);
     legend->SetBit(kCanDelete,true);
-    if (n == 1 && files[0].Contains("MC") && xvar == "runNumber")
+    if (n == 1 && !used[0])
     {
         deleteCanvas(c1);
         stufftodelete->Clear();
         return 0;
     }
+    for (Int_t i = 0; i < n; i++)
+    {
+        if (!used[i])
+            continue;
+        if (type == Resolution || type == Profile)
+        {
+            if (p[i] == firstp)
+                p[i]->Draw("P");
+            else
+                p[i]->Draw("same P");
+            legend->AddEntry(p[i],names[i],"pl");
+        }
+        else if (type == Histogram || type == OrgHistogram)
+        {
+            p[i]->Draw("same");
+            legend->AddEntry(p[i],names[i],"l");
+            legend->AddEntry((TObject*)0,meansrmss[i],"");
+        }
+    }
     if (n>=2)
     {
-        if (!(files[0].Contains("MC") && xvar == "runNumber") && files[0] != "")
-        {
-            if (type == Resolution || type == Profile)
-                legend->AddEntry(p[0],names[0],"pl");
-            else if (type == Histogram || type == OrgHistogram)
-            {
-                legend->AddEntry(p[0],names[0],"l");
-                legend->AddEntry((TObject*)0,meansrmss[0],"");
-            }
-        }
-        for (Int_t i = 1; i < n; i++)
-        {
-            if (files[i].Contains("MC") && xvar == "runNumber")
-                continue;
-            if (type == Resolution || type == Profile)
-            {
-                p[i]->Draw("same P");
-                legend->AddEntry(p[i],names[i],"pl");
-            }
-            else if (type == Histogram || type == OrgHistogram)
-            {
-                p[i]->Draw("same");
-                legend->AddEntry(p[i],names[i],"l");
-                legend->AddEntry((TObject*)0,meansrmss[i],"");
-            }
-        }
-
         if (legend->GetListOfPrimitives()->At(0) == 0)
         {
             stufftodelete->Clear();
