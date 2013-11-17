@@ -187,7 +187,7 @@ void misalignmentDependence(TCanvas *c1old,
 }
 
 
-//This version does not take a canvas as its argument.  It simply runs trackSplitPlot to produce the canvas.
+//This version does not take a canvas as its argument.  It runs trackSplitPlot to produce the canvas.
 
 void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
@@ -228,7 +228,7 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 
 //This version does not take a function as its argument.  It automatically determines what function, parameter,
 //functionname, and parametername to use based on misalignment, xvar, yvar, relative, resolution, and pull.
-//However, you have to manually put in which plots to fit to what shapes.
+//However, you have to manually put into the function which plots to fit to what shapes.
 //I have put in several fits using elliptical and sagitta misalignments.
 //The 2012A data, using the prompt geometry, is a nice example if you want to see an elliptical misalignment.
 //If drawfits is true, it draws the fits; otherwise it plots the parameter as a function of misalignment as given by values.
