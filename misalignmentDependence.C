@@ -1,3 +1,4 @@
+#include "TGraph2DErrors.h"
 #include "trackSplitPlot.C"
 
 using namespace std;
@@ -18,15 +19,15 @@ using namespace std;
 //     This parameter's value and error will be in the legend.  You still need to enter parametername and functionname,
 //     because they will be used for labels.
 
-//The LAST version of misalignmentDependence, all the way at the bottom of this file, is probably the most practical to use
-//(for all three of these).
+//The best way to run misalignmentDependence is through makePlots.  If you want to run misalignmentDependence directly,
+//the LAST function, all the way at the bottom of this file, is probably the most practical to use (for all three of these).
 
 
 // The first function takes a canvas as its argument.  This canvas needs to have been produced with trackSplitPlot using
 // the same values of xvar, yvar, relative, resolution, and pull or something strange could happen.
 
 void misalignmentDependence(TCanvas *c1old,
-                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
@@ -53,7 +54,6 @@ void misalignmentDependence(TCanvas *c1old,
         gStyle->SetPadRightMargin(0.115);
     }
 
-    TGraphErrors *g = 0;
     TH1 **p = new TH1*[n];
     TF1 **f = new TF1*[n];
     for (Int_t i = 0; i < n; i++)
@@ -148,31 +148,90 @@ void misalignmentDependence(TCanvas *c1old,
     {
         if (values == 0) return;
 
-        g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
-        stufftodelete->Add(g);
-
-        g->GetXaxis()->SetTitle(misalignment);
-        if (xvar != "")
+        Bool_t phasesmatter = false;
+        if (misalignment == "elliptical" || misalignment == "sagitta" || misalignment == "skew")
         {
-            yaxislabel.Append("   [");
-            yaxislabel.Append(functionname);
-            yaxislabel.Append("]");
+            if (phases == 0)
+            {
+                cout << "This misalignment has a phase, but you didn't supply the phases!" << endl
+                     << "Can't produce plots depending on the misalignment value." << endl;
+                return;
+            }
+            int firstnonzero = -1;
+            for (Int_t i = 0; i < nFiles; i++)
+            {
+                if (values[i] == 0) continue;                    //if the amplitude is 0 the phase is arbitrary
+                if (firstnonzero == -1) firstnonzero = i;
+                if (phases[i] != phases[firstnonzero])
+                    phasesmatter = true;
+            }
         }
-        g->GetYaxis()->SetTitle(yaxislabel);
 
-        g->SetMarkerColor(colors[0]);
-        g->SetMarkerStyle(20);
-
-        g->Draw("AP");
-        Double_t yaxismax = g->GetYaxis()->GetXmax();
-        Double_t yaxismin = g->GetYaxis()->GetXmin();
-        if (yaxismin > 0)
+        if (!phasesmatter)
         {
-            yaxismax += yaxismin;
-            yaxismin = 0;
+            TGraphErrors *g = new TGraphErrors(nFiles,values,result,(Double_t*)0,error);
+            g->SetName("");
+            stufftodelete->Add(g);
+
+            TString xaxislabel = "#epsilon_{";
+            xaxislabel.Append(misalignment);
+            xaxislabel.Append("}");
+            g->GetXaxis()->SetTitle(xaxislabel);
+            if (xvar != "")
+            {
+                yaxislabel.Append("   [");
+                yaxislabel.Append(functionname);
+                yaxislabel.Append("]");
+            }
+            g->GetYaxis()->SetTitle(yaxislabel);
+
+            g->SetMarkerColor(colors[0]);
+            g->SetMarkerStyle(20);
+
+            g->Draw("AP");
+            Double_t yaxismax = g->GetYaxis()->GetXmax();
+            Double_t yaxismin = g->GetYaxis()->GetXmin();
+            if (yaxismin > 0)
+            {
+                yaxismax += yaxismin;
+                yaxismin = 0;
+            }
+            g->GetYaxis()->SetRangeUser(yaxismin,yaxismax);
+            g->Draw("AP");
         }
-        g->GetYaxis()->SetRangeUser(yaxismin,yaxismax);
-        g->Draw("AP");
+        else
+        {
+            double *xvalues = new double[nFiles];
+            double *yvalues = new double[nFiles];      //these are not physically x and y (except in the case of skew)
+            for (int i = 0; i < nFiles; i++)
+            {
+                xvalues[i] = values[i] * cos(phases[i]);
+                yvalues[i] = values[i] * sin(phases[i]);
+            }
+            TGraph2DErrors *g = new TGraph2DErrors(nFiles,xvalues,yvalues,result,(Double_t*)0,(Double_t*)0,error);
+            g->SetName("");
+            stufftodelete->Add(g);
+            delete[] xvalues;        //A TGraph2DErrors has its own copy of xvalues and yvalues, so it's ok to delete these copies.
+            delete[] yvalues;
+            
+            TString xaxislabel = "#epsilon_{";
+            xaxislabel.Append(misalignment);
+            xaxislabel.Append("}cos(#delta)");
+            TString realyaxislabel = xaxislabel;
+            realyaxislabel.ReplaceAll("cos(#delta)","sin(#delta)");
+            g->GetXaxis()->SetTitle(xaxislabel);
+            g->GetYaxis()->SetTitle(realyaxislabel);
+            TString zaxislabel = /*"fake"*/yaxislabel;         //yaxislabel is defined earlier
+            if (xvar != "")
+            {
+                zaxislabel.Append("   [");
+                zaxislabel.Append(functionname);
+                zaxislabel.Append("]");
+            }
+            g->GetZaxis()->SetTitle(zaxislabel);
+            g->SetMarkerStyle(20);
+            g->Draw("pcolerr");
+        }
     }
 
     if (saveas != "")
@@ -187,42 +246,124 @@ void misalignmentDependence(TCanvas *c1old,
 }
 
 
+//This version allows you to show multiple parameters.  It runs the previous version multiple times, once for each parameter.
+//saveas will be modified to indicate which parameter is being used each time.
+
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "")
+{
+    for (int i = 0; i < nParameters; i++)
+    {
+        TString saveasi = saveas;
+        TString insert = nPart(1,parameternames[i]);
+        insert.Prepend(".");
+        saveasi.Insert(saveasi.Last('.'),insert);    //insert the parameter name before the file extension
+        misalignmentDependence(c1old,
+                               nFiles,names,misalignment,values,phases,xvar,yvar,
+                               function,parameters[i],parameternames[i],functionname,
+                               relative,resolution,pull,
+                               saveasi);
+    }
+}
+
+
 //This version does not take a canvas as its argument.  It runs trackSplitPlot to produce the canvas.
 
-void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                             TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,""),
-                           nFiles,names,misalignment,values,xvar,yvar,
+                           nFiles,names,misalignment,values,phases,xvar,yvar,
                            function,parameter,parametername,functionname,
                            relative,resolution,pull,saveas);
+}
+
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "")
+{
+    for (int i = 0; i < nParameters; i++)
+    {
+        TString saveasi = saveas;
+        TString insert = nPart(1,parameternames[i]);
+        insert.Prepend(".");
+        saveasi.Insert(saveasi.Last('.'),insert);    //insert the parameter name before the file extension
+        misalignmentDependence(nFiles,files,names,misalignment,values,phases,xvar,yvar,
+                               function,parameters[i],parameternames[i],functionname,
+                               relative,resolution,pull,
+                               saveasi);
+    }
 }
 
 
 // This version allows you to use a string for the function.  It creates a TF1 using this string and uses this TF1
 
 void misalignmentDependence(TCanvas *c1old,
-                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     TF1 *f = new TF1("func",function);
-    misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    misalignmentDependence(c1old,nFiles,names,misalignment,values,phases,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
     delete f;
 }
 
-void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "")
+{
+    for (int i = 0; i < nParameters; i++)
+    {
+        TString saveasi = saveas;
+        TString insert = nPart(1,parameternames[i]);
+        insert.Prepend(".");
+        saveasi.Insert(saveasi.Last('.'),insert);    //insert the parameter name before the file extension
+        misalignmentDependence(c1old,
+                               nFiles,names,misalignment,values,phases,xvar,yvar,
+                               function,parameters[i],parameternames[i],functionname,
+                               relative,resolution,pull,
+                               saveasi);
+    }
+}
+
+
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                             TString function,Int_t parameter,TString parametername = "",TString functionname = "",
                             Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                             TString saveas = "")
 {
     TF1 *f = new TF1("func",function);
-    misalignmentDependence(nFiles,files,names,misalignment,values,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+    misalignmentDependence(nFiles,files,names,misalignment,values,phases,xvar,yvar,f,parameter,parametername,functionname,relative,resolution,pull,saveas);
     delete f;
 }
+
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "")
+{
+    for (int i = 0; i < nParameters; i++)
+    {
+        TString saveasi = saveas;
+        TString insert = nPart(1,parameternames[i]);
+        insert.Prepend(".");
+        saveasi.Insert(saveasi.Last('.'),insert);    //insert the parameter name before the file extension
+        misalignmentDependence(nFiles,files,names,misalignment,values,phases,xvar,yvar,
+                               function,parameters[i],parameternames[i],functionname,
+                               relative,resolution,pull,
+                               saveasi);
+    }
+}
+
 
 
 
@@ -236,8 +377,10 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 //If the combination of misalignment, xvar, yvar, relative, resolution, pull has a default function to use, it returns true,
 // otherwise it returns false.
 
+//This is the version called by makeThesePlots.C
+
 Bool_t misalignmentDependence(TCanvas *c1old,
-                              Int_t nFiles,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+                              Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                               Bool_t drawfits = true,
                               Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                               TString saveas = "")
@@ -245,23 +388,33 @@ Bool_t misalignmentDependence(TCanvas *c1old,
     if (xvar == "")
     {
         if (c1old == 0 || misalignment == "" || values == 0) return false;
-        misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,(TF1*)0,0,"","",relative,resolution,pull,saveas);
+        misalignmentDependence(c1old,nFiles,names,misalignment,values,phases,xvar,yvar,(TF1*)0,0,"","",relative,resolution,pull,saveas);
         return true;
     }
     TF1 *f;
-    TString parametername = "";
     TString functionname = "";
+
+    //if only one parameter is of interest
+    TString parametername = "";
     Int_t parameter = 9999;
+
+    //if multiple parameters are of interest
+    Int_t nParameters = -1;
+    TString *parameternames = 0;
+    Int_t *parameters = 0;
+
     if (misalignment == "sagitta")
     {
         if (xvar == "phi" && yvar == "phi" && !resolution && !pull)
         {
-            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","-[0]*cos([1]*x+[2])");
             f->FixParameter(1,1);
-            f->FixParameter(2,-TMath::Pi()/2);
-            parametername = "A";
-            functionname = "#Delta#phi=-Acos(#phi_{org})";
-            parameter = 0;
+            nParameters = 2;
+            Int_t tempParameters[2] = {0,2};
+            TString tempParameterNames[2] = {"A","B"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#phi=-Acos(#phi_{org}+B)";
         }
         /*
         Neither of these fits work.  It's kind of like sin(2x) but not exactly.
@@ -356,9 +509,17 @@ Bool_t misalignmentDependence(TCanvas *c1old,
     }
     if (functionname == "") return false;
     if (drawfits)
+    {
         parameter = -parameter-1;
-    misalignmentDependence(c1old,nFiles,names,misalignment,values,xvar,yvar,
-                           f,parameter,parametername,functionname,relative,resolution,pull,saveas);
+        for (int i = 0; i < nParameters; i++)
+            parameters[i] = -parameters[i]-1;
+    }
+    if (nParameters > 0)
+        misalignmentDependence(c1old,nFiles,names,misalignment,values,phases,xvar,yvar,
+                               f,nParameters,parameters,parameternames,functionname,relative,resolution,pull,saveas);
+    else
+        misalignmentDependence(c1old,nFiles,names,misalignment,values,phases,xvar,yvar,
+                               f,parameter,parametername,functionname,relative,resolution,pull,saveas);
     delete f;
     return true;
     
@@ -368,12 +529,12 @@ Bool_t misalignmentDependence(TCanvas *c1old,
 //This is the most practically useful version.  It does not take a canvas, but produces it automatically and then determines what
 //function to fit it to.
 
-Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString xvar,TString yvar,
+Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
                               Bool_t drawfits = true,
                               Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
                               TString saveas = "")
 {
     return misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,""),
-                                  nFiles,names,misalignment,values,xvar,yvar,
+                                  nFiles,names,misalignment,values,phases,xvar,yvar,
                                   drawfits,relative,resolution,pull,saveas);
 }

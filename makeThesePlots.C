@@ -20,7 +20,7 @@ To make ALL plots (313 in total)
 
 void makeThesePlots()
 {
-    makePlots(nFiles,files,names,"",0,plotdirectory);
+    makePlots(nFiles,files,names,"",0,0,plotdirectory);
 }
 
 /**************************************************************************
@@ -44,7 +44,7 @@ to make all plots involving a single x or y variable, or both
 
 void makeThesePlots(TString xvar,TString yvar)
 {
-    makePlots(nFiles,files,names,"",0,plotdirectory,xvar,yvar);
+    makePlots(nFiles,files,names,"",0,0,plotdirectory,xvar,yvar);
 }
 
 /*************************************************************************************
@@ -68,6 +68,6 @@ nHits     |
 
 void makeThesePlots(Bool_t matrix[xsize][ysize])
 {
-    makePlots(nFiles,files,names,"",0,plotdirectory,matrix);
+    makePlots(nFiles,files,names,"",0,0,plotdirectory,matrix);
 }
 

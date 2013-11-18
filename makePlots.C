@@ -16,7 +16,7 @@ Bool_t relative[ysize]         = {true, false, false, false, false, false,   fal
 // in xvariables and yvariables.
 //********************************************************************
 
-void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory,
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,
                Bool_t matrix[xsize][ysize])
 {
     stufftodelete->SetOwner(true);
@@ -163,11 +163,11 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 {
                     //make profile
                     TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],false,(bool)pull,s[i]);
-                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
                     {
                         s[i+2].ReplaceAll(".png",".parameter.png");
-                        misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                    false,relative[y],false,(bool)pull,s[i+2]);
                     }
                     stufftodelete->Clear();
@@ -178,11 +178,11 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
 
                     //make resolution plot
                     TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],true ,(bool)pull,s[i+1]);
-                    if (misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                    if (misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]))
                     {
                         s[i+2].ReplaceAll("/fits/profile.","/fits/parameter.profile");
-                        misalignmentDependence(c2,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                        misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                    false,relative[y],true,(bool)pull,s[i+3]);
                     }
                     stufftodelete->Clear();
@@ -195,10 +195,10 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 {
                     //make histogram
                     TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],false,(bool)pull,s[i]);
-                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                true,relative[y],false,(bool)pull,s[i+2]))
                     {
-                        misalignmentDependence(c1,nFiles,names,misalignment,values,xvariables[x],yvariables[y],
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]);
                     }
                     stufftodelete->Clear();
@@ -215,7 +215,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Bool_t matrix[xsize][ysize])
 {
-    makePlots(nFiles,files,names,"",(Double_t*)0,directory,
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory,
               matrix);
 }
 
@@ -237,7 +237,7 @@ void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
 //                                    (including Delta_pt/pt_org)
 //***************************************************************************
 
-void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory,
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,
                TString xvar,TString yvar)
 {
     Bool_t matrix[xsize][ysize];
@@ -252,13 +252,13 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 ymatch = true;
             matrix[x][y] = (xmatch && ymatch);
         }
-    makePlots(nFiles,files,names,misalignment,values,directory,matrix);
+    makePlots(nFiles,files,names,misalignment,values,phases,directory,matrix);
 }
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,
                TString xvar,TString yvar)
 {
-    makePlots(nFiles,files,names,"",(Double_t*)0,directory,
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory,
               xvar,yvar);
 }
 
@@ -276,14 +276,14 @@ void makePlots(TString file,TString directory,
 //functions to make all plots
 //***************************
 
-void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,TString directory)
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory)
 {
-    makePlots(nFiles,files,names,misalignment,values,directory,"all","all");
+    makePlots(nFiles,files,names,misalignment,values,phases,directory,"all","all");
 }
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory)
 {
-    makePlots(nFiles,files,names,"",(Double_t*)0,directory);
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory);
 }
 
 void makePlots(TString file,TString directory)
