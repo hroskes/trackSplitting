@@ -108,15 +108,16 @@ void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_
 //e.g. nPart(1,"a;b;c;d;e") = a
 //if part <= 0 or part > (number of semicolons + 1), it returns ""
 //It's used in misalignmentDependence.C
-TString nPart(Int_t part,TString string)
+//It's similar to TString::Tokenize but doesn't require deleting anything
+TString nPart(Int_t part,TString string,TString delimit = ";")
 {
     if (part <= 0) return "";
     for (int i = 1; i < part; i++)    //part-1 times
     {
-        if (string.Index(";") < 0) return "";
-        string.Replace(0,string.Index(";")+1,"",0);
+        if (string.Index(delimit) < 0) return "";
+        string.Replace(0,string.Index(delimit)+1,"",0);
     }
-    if (string.Index(";") >= 0)
-        string.Remove(string.Index(";"));
+    if (string.Index(delimit) >= 0)
+        string.Remove(string.Index(delimit));
     return string;
 }
