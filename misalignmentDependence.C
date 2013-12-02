@@ -48,6 +48,10 @@ void misalignmentDependence(TCanvas *c1old,
     setTDRStyle();
     gStyle->SetOptStat(0);
     gStyle->SetOptFit(0);
+    gStyle->SetFitFormat("5.4g");
+    gStyle->SetFuncColor(2);
+    gStyle->SetFuncStyle(1);
+    gStyle->SetFuncWidth(1);
     if (!drawfits)
     {
         gStyle->SetCanvasDefW(678);
@@ -97,11 +101,28 @@ void misalignmentDependence(TCanvas *c1old,
         for (int i = 0; i < n; i++)
         {
             f[i]->SetLineColor(colors[i]);
-            p[i]->Fit(f[i]);
-            result[i] = f[i]->GetParameter(parameter);
+            f[i]->SetLineWidth(1);
+            p[i]->SetMarkerColor(colors[i]);
+            p[i]->SetMarkerStyle(20+i);
+            p[i]->SetLineColor(colors[i]);
+            p[i]->Fit(f[i],"IM");
             error[i]  = f[i]->GetParError (parameter);
+            if (function->GetName() == TString("sine"))
+            {
+                if (f[i]->GetParameter(0) < 0)
+                {
+                    f[i]->SetParameter(0,-f[i]->GetParameter(0));
+                    f[i]->SetParameter(2,f[i]->GetParameter(2)+pi);
+                }
+                while(f[i]->GetParameter(2) >= 2*pi)
+                    f[i]->SetParameter(2,f[i]->GetParameter(2)-2*pi);
+                while(f[i]->GetParameter(2) < 0)
+                    f[i]->SetParameter(2,f[i]->GetParameter(2)+2*pi);
+            }
+            result[i] = f[i]->GetParameter(parameter);
         }
     }
+
 
     TCanvas *c1 = TCanvas::MakeDefCanvas();
 
@@ -409,6 +430,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
         {
             f = new TF1("sine","-[0]*cos([1]*x+[2])");
             f->FixParameter(1,1);
+            f->SetParameter(0,6e-4);
             nParameters = 2;
             Int_t tempParameters[2] = {0,2};
             TString tempParameterNames[2] = {"A","B"};
@@ -417,14 +439,15 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             functionname = "#Delta#phi=-Acos(#phi_{org}+B)";
         }
         /*
-        Neither of these fits work.  It's kind of like sin(2x) but not exactly.
+        This plot is really complicated.  A phase does more than translate the plot        
         if (xvar == "phi" && yvar == "phi" && !resolution && pull)
         {
-            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x+[2])+[3]*sin([4]*x+[5]");
             f->FixParameter(1,2);
+            f->FixParameter(
             f->FixParameter(2,0);
             //f->FixParameter(1,1);
-            //f->FixParameter(2,-TMath::Pi()/2);
+            //f->FixParameter(2,-pi/2);
             parametername = "A";
             functionname = "#Delta#phi/#delta(#Delta#phi)=Asin(2#phi_{org})";
             //functionname = "#Delta#phi/#delta(#Delta#phi)=-Acos(#phi_{org})";
@@ -434,7 +457,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
         if (xvar == "theta" && yvar == "theta" && !resolution && pull)
         {
             f = new TF1("line","-[0]*(x+[1])");
-            f->FixParameter(1,-TMath::Pi()/2);
+            f->FixParameter(1,-pi/2);
             parametername = "A";
             functionname = "#Delta#theta/#delta(#Delta#theta)=-A(#theta_{org}-#pi/2)";
             parameter = 0;
@@ -453,27 +476,32 @@ Bool_t misalignmentDependence(TCanvas *c1old,
     {
         if (xvar == "phi" && yvar == "dxy" && !resolution && !pull)
         {
-            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x-[2])");
             f->FixParameter(1,-2);
-            f->FixParameter(2,0);
-            parametername = "A;#mum";
-            functionname = "#Deltadxy=-Asin(2#phi_{org})";
-            parameter = 0;
+            f->SetParameter(0,5e-4);
+            nParameters = 2;
+            Int_t tempParameters[2] = {0,2};
+            TString tempParameterNames[2] = {"A;#mum","B"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Deltadxy=-Asin(2#phi_{org}-B)";
         }
         if (xvar == "phi" && yvar == "dxy" && !resolution && pull)
         {
-            f = new TF1("sine","[0]*sin([1]*x+[2])");
+            f = new TF1("sine","[0]*sin([1]*x-[2])");
             f->FixParameter(1,-2);
-            f->FixParameter(2,0);
-            parametername = "A";
-            functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org})";
-            parameter = 0;
+            nParameters = 2;
+            Int_t tempParameters[2] = {0,2};
+            TString tempParameterNames[2] = {"A;#mum","B"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org}-B)";
         }
         
         if (xvar == "theta" && yvar == "dz" && !resolution && !pull)
         {
             f = new TF1("line","-[0]*(x-[1])");
-            f->FixParameter(1,TMath::Pi()/2);
+            f->FixParameter(1,pi/2);
             parametername = "A;#mum";
             functionname = "#Deltadz=-A(#theta_{org}-#pi/2)";
             parameter = 0;
@@ -483,7 +511,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
         if (xvar == "theta" && yvar == "dz" && !resolution && pull)
         {
             f = new TF1("sine","[0]*sin([1]*x+[2])");
-            f->FixParameter(2,-TMath::Pi()/2);
+            f->FixParameter(2,-pi/2);
             f->FixParameter(1,1);
             parametername = "A";
             functionname = "#Deltadz/#delta(#Deltadz)=Acos(#theta_{org})";
@@ -505,6 +533,53 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             parametername = "A;cm^{-1}";
             functionname = "#Delta#phi/#delta(#Delta#phi)=-Adxy_{org}";
             parameter = 0;
+        }
+    }
+    if (misalignment == "skew")
+    {
+        if (xvar == "phi" && yvar == "theta" && resolution && !pull)
+        {
+            f = new TF1("sine","[0]*sin([1]*x+[2])+[3]");
+            f->FixParameter(1,2);
+            nParameters = 3;
+            Int_t tempParameters[3] = {0,2,3};
+            TString tempParameterNames[3] = {"A","B","C"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#theta=Asin(2#phi_{org}+B)+C";
+        }
+        if (xvar == "phi" && yvar == "eta" && resolution && !pull)
+        {
+            f = new TF1("sine","[0]*sin([1]*x+[2])+[3]");
+            f->FixParameter(1,2);
+            nParameters = 3;
+            Int_t tempParameters[3] = {0,2,3};
+            TString tempParameterNames[3] = {"A","B","C"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#eta=Asin(2#phi_{org}+B)+C";
+        }
+        if (xvar == "phi" && yvar == "theta" && resolution && pull)
+        {
+            f = new TF1("sine","[0]*sin([1]*x+[2])+[3]");
+            f->FixParameter(1,2);
+            nParameters = 3;
+            Int_t tempParameters[3] = {0,2,3};
+            TString tempParameterNames[3] = {"A","B","C"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#theta/#delta(#Delta#theta)=Asin(2#phi_{org}+B)+C";
+        }
+        if (xvar == "phi" && yvar == "eta" && resolution && pull)
+        {
+            f = new TF1("sine","[0]*sin([1]*x+[2])+[3]");
+            f->FixParameter(1,2);
+            nParameters = 3;
+            Int_t tempParameters[3] = {0,2,3};
+            TString tempParameterNames[3] = {"A","B","C"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#eta/#delta(#Delta#eta)=Asin(2#phi_{org}+B)+C";
         }
     }
     if (functionname == "") return false;
