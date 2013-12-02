@@ -4,6 +4,8 @@
 #include "TTree.h"
 #include "TMath.h"
 
+Double_t pi = TMath::Pi();
+
 enum Statistic {Minimum, Maximum, Average, RMS};
 
 Int_t minrun = -1;
