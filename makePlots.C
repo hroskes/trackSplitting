@@ -10,7 +10,7 @@ TString yvariables[ysize]      = {"pt", "pt",  "eta", "phi", "dz",  "dxy",   "th
 Bool_t relative[ysize]         = {true, false, false, false, false, false,   false,     false,     false};
 
 //********************************************************************
-//general functions
+//general functions, to allow any choice of variables
 //it makes plots for each pair of variables if matrix[x][y] is true
 //the order of the variables in the matrix is the same as shown above,
 // in xvariables and yvariables.
@@ -181,7 +181,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                     if (misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                true,relative[y],true,(bool)pull,s[i+3]))
                     {
-                        s[i+2].ReplaceAll("/fits/profile.","/fits/parameter.profile");
+                        s[i+3].ReplaceAll(".png",".parameter.png");
                         misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
                                                    false,relative[y],true,(bool)pull,s[i+3]);
                     }
