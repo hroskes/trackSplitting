@@ -345,8 +345,6 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
             p[i]->SetMarkerColor(kWhite);
             p[i]->SetMarkerStyle(1);
         }
-        //delete tree;
-        //delete f;
     }
 
     TH1 *firstp = 0;
@@ -491,16 +489,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
     }
 
     if (saveas != "")
-    {
         saveplot(c1,saveas);
-        //for (int i = 0; i < n; i++)
-        //    delete p[i];
-        //if (type == Histogram || type == OrgHistogram)
-        //    delete maxp;
-        //delete legend;
-        //stufftodelete->Clear();
-    }
-    //deleteCanvas(c1);
 
     return c1;
 }
