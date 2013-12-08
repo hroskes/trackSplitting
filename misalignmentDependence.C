@@ -546,7 +546,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             TString tempParameterNames[3] = {"A","B","C"};
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Delta#theta=Asin(2#phi_{org}+B)+C";
+            functionname = "#sigma(#Delta#theta)=Asin(2#phi_{org}+B)+C";
         }
         if (xvar == "phi" && yvar == "eta" && resolution && !pull)
         {
@@ -557,7 +557,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             TString tempParameterNames[3] = {"A","B","C"};
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Delta#eta=Asin(2#phi_{org}+B)+C";
+            functionname = "#sigma(#Delta#eta)=Asin(2#phi_{org}+B)+C";
         }
         if (xvar == "phi" && yvar == "theta" && resolution && pull)
         {
@@ -568,7 +568,7 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             TString tempParameterNames[3] = {"A","B","C"};
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Delta#theta/#delta(#Delta#theta)=Asin(2#phi_{org}+B)+C";
+            functionname = "#sigma(#Delta#theta/#delta(#Delta#theta))=Asin(2#phi_{org}+B)+C";
         }
         if (xvar == "phi" && yvar == "eta" && resolution && pull)
         {
@@ -579,7 +579,19 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             TString tempParameterNames[3] = {"A","B","C"};
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Delta#eta/#delta(#Delta#eta)=Asin(2#phi_{org}+B)+C";
+            functionname = "#sigma(#Delta#eta/#delta(#Delta#eta))=Asin(2#phi_{org}+B)+C";
+        }
+        if (xvar == "phi" && yvar == "dz" && !resolution && !pull)
+        {
+            f = new TF1("tanh","[0]*(tanh([1]*(x+[2]))   )");  // - tanh(([3]-[1])*x+[2]) + 1)");
+            f->SetParameter(0,100);
+            f->FixParameter(3,pi);
+            nParameters = 3;
+            Int_t tempParameters[3] = {0,1,2};
+            TString tempParameterNames[3] = {"A;#mum","B","C"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Deltadz=Atanh(B(#phi_{org}+C))";
         }
     }
     if (functionname == "") return false;
