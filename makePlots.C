@@ -71,7 +71,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
 
                 if (!matrix[x][y]) continue;
 
-                if (x == 9 && y == 8) continue;
+                if (xvariables[x] == "" && yvariables[y] == "") continue;
 
                 Int_t nPlots = nFiles+4;                     //scatterplot for each (if you uncomment it), profile, resolution, and fits for each.
                 vector<TString> s;
