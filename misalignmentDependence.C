@@ -107,7 +107,11 @@ void misalignmentDependence(TCanvas *c1old,
             p[i]->SetLineColor(colors[i]);
             p[i]->Fit(f[i],"IM");
             error[i]  = f[i]->GetParError (parameter);
-            if (function->GetName() == TString("sine"))
+            //the fits sometimes don't work if the parameters are constrained.
+            //take care of the constraining here.
+            //for sine, make the amplitude positive and the phase between 0 and 2pi.
+            //unless the amplitude is the only parameter (eg sagitta theta theta)
+            if (function->GetName() == TString("sine") && function->GetNumberFreeParameters() >= 2)
             {
                 if (f[i]->GetParameter(0) < 0)
                 {
@@ -584,7 +588,10 @@ Bool_t misalignmentDependence(TCanvas *c1old,
         if (xvar == "phi" && yvar == "dz" && !resolution && !pull)
         {
             f = new TF1("tanh","[0]*(tanh([1]*(x+[2]))   )");  // - tanh(([3]-[1])*x+[2]) + 1)");
+            //f = new TF1("tanh","[0]*(tanh([1]*(x+[2])) + tanh([1]*([3]-[2]-x)) - 1)");
             f->SetParameter(0,100);
+            f->SetParLimits(1,-20,20);
+            f->SetParLimits(2,0,pi);
             f->FixParameter(3,pi);
             nParameters = 3;
             Int_t tempParameters[3] = {0,1,2};
@@ -592,6 +599,44 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             parameters = tempParameters;
             parameternames = tempParameterNames;
             functionname = "#Deltadz=Atanh(B(#phi_{org}+C))";
+            //functionname = "#Deltadz=A(tanh(B(#phi_{org}+C)) + tanh(B(#pi-#phi_{org}-C)) - 1";
+        }
+    }
+    if (misalignment == "layerRot")
+    {
+        if (xvar == "qoverpt" && yvar == "qoverpt" && !relative && !resolution && !pull)
+        {
+            f = new TF1("sech","[0]/cosh([1]*(x+[2]))+[3]");
+            //f = new TF1("gauss","[0]/exp(([1]*(x+[2]))^2)+[3]");   //sech works better than a gaussian
+            f->SetParameter(0,1);
+            f->SetParameter(1,1);
+            f->SetParLimits(1,0,10);
+            f->FixParameter(2,0);
+            f->FixParameter(3,0);
+            nParameters = 2;
+            Int_t tempParameters[2] = {0,1};
+            TString tempParameterNames[2] = {"A;e/GeV","B;GeV/e"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta(q/p_{T})=Asech(B(q/p_{T})_{org})";
+        }
+    }
+    if (misalignment == "telescope")
+    {
+        if (xvar == "theta" && yvar == "theta" && !relative && !resolution && !pull)
+        {
+            f = new TF1("gauss","[0]/exp(([1]*(x+[2]))^2)+[3]");
+            f->SetParameter(0,1);
+            f->SetParameter(1,1);
+            f->SetParLimits(1,0,10);
+            f->FixParameter(2,-pi/2);
+            f->FixParameter(3,0);
+            nParameters = 2;
+            Int_t tempParameters[2] = {0,1};
+            TString tempParameterNames[2] = {"A","B"};
+            parameters = tempParameters;
+            parameternames = tempParameterNames;
+            functionname = "#Delta#theta=Aexp(-(B(#theta_{org}-#pi/2))^{2})";
         }
     }
     if (functionname == "") return false;
