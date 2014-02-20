@@ -8,7 +8,7 @@ using namespace std;
 // (1) if xvar == "", it will plot the mean (if !resolution) or width (if resolution) of Delta_yvar as a function
 //     of the misalignment values, as given in values.  misalignment (e.g. sagitta, elliptical) will be used as the
 //     x axis label.
-// (2) if xvar != "", it will fit the profile/resolution to a function.  If paramter > 0, it will plot the parameter given by parameter as
+// (2) if xvar != "", it will fit the profile/resolution to a function.  If parameter > 0, it will plot the parameter given by parameter as
 //     a function of the misalignment.  parametername is used as the y axis label.  You can put a semicolon in parametername
 //     to separate the name from the units.  Functionname describes the funciton, and is put in brackets in the y axis label.
 //     For example, to fit to Delta_pt = [0]*(eta_org-[1]), you could use functionname = "#Deltap_{T} = A(#eta_{org}-B)",
