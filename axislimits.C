@@ -79,7 +79,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 
     for (Int_t j = 0; j < nFiles; j++)
     {
-        if (files[j].Contains("MC") && var == "runNumber")   //because then run number is meaningless
+        if ((files[j].Contains("MC") && var == "runNumber") || files[j] == "")   //because then run number is meaningless
             continue;
         TFile *f = TFile::Open(files[j]);
         TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");

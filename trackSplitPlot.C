@@ -22,7 +22,7 @@ Int_t binsScatterPlotx = 1000;
 Int_t binsScatterPloty = 1000;
 Int_t binsHistogram = 100;
 Int_t runNumberBins = 30;
-Int_t binsProfileResolution = 8;     //for everything but runNumber and nHits
+Int_t binsProfileResolution = 30;    //for everything but runNumber and nHits
                                      //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
@@ -163,24 +163,23 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         stufftodelete->Add(p[i]);
         p[i]->SetBit(kCanDelete,true);
 
+        used[i] = true;
+        if ((files[i].Contains("MC") && xvar == "runNumber") || files[i] == "")  //if it's MC data, the run number is meaningless
+        {
+            used[i] = false;
+            p[i]->SetLineColor(kWhite);
+            p[i]->SetMarkerColor(kWhite);
+            for (unsigned int j = 0; j < q.size(); j++)
+                delete q[j];
+            continue;
+        }
+
         TFile *f = TFile::Open(files[i]);
         TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");
         if (tree == 0)
             tree = (TTree*)f->Get("splitterTree");
 
         lengths[i] = tree->GetEntries();
-
-        used[i] = true;
-        if (files[i].Contains("MC") && xvar == "runNumber")  //if it's MC data, the run number is meaningless
-        {
-            used[i] = false;
-            p[i]->SetLineColor(kWhite);
-            p[i]->SetMarkerColor(kWhite);
-            delete f;
-            for (unsigned int j = 0; j < q.size(); j++)
-                delete q[j];
-            continue;
-        }
 
         Double_t x = 0, y = 0, rel = 1, sigma1 = 1, sigma2 = 1,           //if !pull, we want to divide by sqrt(2) because we want the error from 1 track
                                                   sigmaorg = 0;

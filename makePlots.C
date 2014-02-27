@@ -25,6 +25,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
     {
         TFile *f = 0;
         bool exists = false;
+        if (files[i] == "") exists = true;
 
         for (int j = 1; j <= 60*24 && !exists; j++, totaltime++)  //wait up to 1 day for the validation to be finished
         {
