@@ -395,7 +395,6 @@ void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString m
 //This version does not take a function as its argument.  It automatically determines what function, parameter,
 //functionname, and parametername to use based on misalignment, xvar, yvar, relative, resolution, and pull.
 //However, you have to manually put into the function which plots to fit to what shapes.
-//I have put in several fits using elliptical and sagitta misalignments.
 //The 2012A data, using the prompt geometry, is a nice example if you want to see an elliptical misalignment.
 //If drawfits is true, it draws the fits; otherwise it plots the parameter as a function of misalignment as given by values.
 
@@ -669,4 +668,13 @@ Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString
     return misalignmentDependence(trackSplitPlot(nFiles,files,names,xvar,yvar,relative,resolution,pull,""),
                                   nFiles,names,misalignment,values,phases,xvar,yvar,
                                   drawfits,relative,resolution,pull,saveas);
+}
+
+Bool_t hasFit(TString misalignment,TString xvar,TString yvar,Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false)
+{
+    return misalignmentDependence((TCanvas*)0,
+                                  0,(TString*)0,misalignment,(Double_t*)0,(Double_t*)0,xvar,yvar,
+                                  false,
+                                  relative,resolution,pull,
+                                  TString(""));
 }
