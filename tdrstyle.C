@@ -6,8 +6,6 @@
 // setTDRStyle()
 //
 
-#include "axislabel.C"
-
 // tdrGrid: Turns the grid lines on (true) or off (false)
 
 void set_plot_style();

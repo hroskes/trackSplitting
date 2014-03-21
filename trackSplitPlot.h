@@ -53,4 +53,19 @@ Bool_t relativearray[ysize]         = {true, false, false, false, false, false, 
 
 TList *stufftodelete = new TList();
 
+
+
+TString axislabel(TString variable, Char_t axis, Bool_t relative = false, Bool_t resolution = false, Bool_t pull = false);
+void deleteCanvas(TObject *canvas);
+TString fancyname(TString variable);
+TString nPart(Int_t part,TString string,TString delimit = ";");
+void placeholder(TString saveas = "",Bool_t wide = false);
+void saveplot(TCanvas *c1,TString saveas);
+void setAxisLabels(TH1 *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
+void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
+TString units(TString variable,Char_t axis);
+
+
+
+
 #endif
