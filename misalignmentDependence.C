@@ -43,7 +43,8 @@ void misalignmentDependence(TCanvas *c1old,
     if (parameterunits != "")
         yaxislabel.Append(" (").Append(parameterunits).Append(")");
     TList *list = c1old->GetListOfPrimitives();
-    int n = list->GetEntries() - 2 - (xvar == "");
+    //const int n = list->GetEntries() - 2 - (xvar == "");
+    const int n = nFiles;
 
     setTDRStyle();
     gStyle->SetOptStat(0);
@@ -60,13 +61,16 @@ void misalignmentDependence(TCanvas *c1old,
 
     TH1 **p = new TH1*[n];
     TF1 **f = new TF1*[n];
+    Bool_t used[n];
     for (Int_t i = 0; i < n; i++)
     {
         stringstream s0;
         s0 << "p" << i;
         TString pname = s0.str();
         p[i] = (TH1*)list->/*At(i+1+(xvar == ""))*/FindObject(pname);
-        p[i]->SetDirectory(0);
+        used[i] = (p[i] != 0);
+        if (used[i])
+            p[i]->SetDirectory(0);
         if (xvar == "")
             continue;
         stringstream s;
@@ -82,7 +86,8 @@ void misalignmentDependence(TCanvas *c1old,
     {
         yaxislabel = axislabel(yvar,'y',relative,resolution,pull);
         for (Int_t i = 0; i < nFiles; i++)
-        {
+        { 
+            if (!used[i]) continue;
             if (!resolution)
             {
                 result[i] = p[i]->GetMean();
@@ -100,6 +105,7 @@ void misalignmentDependence(TCanvas *c1old,
     {
         for (int i = 0; i < n; i++)
         {
+            if (!used[i]) continue;
             f[i]->SetLineColor(colors[i]);
             f[i]->SetLineWidth(1);
             p[i]->SetMarkerColor(colors[i]);
@@ -140,6 +146,7 @@ void misalignmentDependence(TCanvas *c1old,
         TString drawoption = "";
         for (int i = 0; i < n; i++)
         {
+            if (!used[i]) continue;
             p[i]->Draw(drawoption);
             f[i]->Draw("same");
             drawoption = "same";
@@ -487,18 +494,27 @@ Bool_t misalignmentDependence(TCanvas *c1old,
             TString tempParameterNames[2] = {"A;#mum","B"};
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Deltadxy=-Asin(2#phi_{org}-B)";
+            functionname = "#Deltadxy=Asin(2#phi_{org}+B)";
         }
         if (xvar == "phi" && yvar == "dxy" && !resolution && pull)
         {
             f = new TF1("sine","[0]*sin([1]*x-[2])");
+            //f = new TF1("sine","[0]*sin([1]*x-[2]) + [3]");
+
             f->FixParameter(1,-2);
+
             nParameters = 2;
             Int_t tempParameters[2] = {0,2};
             TString tempParameterNames[2] = {"A;#mum","B"};
+            //nParameters = 3;
+            //Int_t tempParameters[3] = {0,2,3};
+            //TString tempParameterNames[3] = {"A;#mum","B","C;#mum"};
+
             parameters = tempParameters;
             parameternames = tempParameterNames;
-            functionname = "#Deltadxy/#delta(#Deltadxy)=-Asin(2#phi_{org}-B)";
+
+            functionname = "#Deltadxy/#delta(#Deltadxy)=Asin(2#phi_{org}+B)";
+            //functionname = "#Deltadxy/#delta(#Deltadxy)=Asin(2#phi_{org}+B) + C";
         }
         
         if (xvar == "theta" && yvar == "dz" && !resolution && !pull)
