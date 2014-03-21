@@ -1,14 +1,12 @@
+#include "trackSplitPlot.h"
+
 //
 // TDR style macro for plots in ROOT
 // .L tdrstyle.C
 // setTDRStyle()
 //
-#include "TStyle.h"
-#include "TROOT.h"
-#include "TColor.h"
-#include "axislabel.C"
-#include "TGaxis.h"
 
+#include "axislabel.C"
 
 // tdrGrid: Turns the grid lines on (true) or off (false)
 

@@ -1,15 +1,4 @@
-#include "TString.h"
-#include "TH1.h"
-#include "TMultiGraph.h"
-#include <sstream>
-using namespace std;
-
-enum PlotType {ScatterPlot,Profile,Histogram,OrgHistogram,Resolution};
-//ScatterPlot:  make a scatterplot of Delta_yvar vs. xvar_org
-//Profile:      make a profile of Delta_yvar vs. xvar_org
-//Histogram:    make a histogram of Delta_yvar
-//OrgHistogram: make a histogram of xvar_org
-//Resolution:   make a plot of (width of Delta_yvar) vs xvar_org
+#include "trackSplitPlot.h"
 
 //This just puts the variable name into a fancy format, with greek letters and subscripts
 TString fancyname(TString variable)

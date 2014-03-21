@@ -1,3 +1,5 @@
+#include "trackSplitPlot.h"
+
 #include "trackSplitPlot.C"
 
 //This makes a plot, of Delta_yvar vs. runNumber, zoomed in to between firstrun and lastrun.

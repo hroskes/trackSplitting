@@ -1,13 +1,6 @@
+#include "trackSplitPlot.h"
+
 #include "misalignmentDependence.C"
-#include "TString.h"
-#include "TSystem.h"
-
-const Int_t xsize = 10;
-const Int_t ysize = 9;
-
-TString xvariables[xsize]      = {"pt", "eta", "phi", "dz",  "dxy", "theta", "qoverpt", "runNumber","nHits",""};
-TString yvariables[ysize]      = {"pt", "pt",  "eta", "phi", "dz",  "dxy",   "theta",   "qoverpt", ""};
-Bool_t relative[ysize]         = {true, false, false, false, false, false,   false,     false,     false};
 
 //********************************************************************
 //general functions, to allow any choice of variables
@@ -127,7 +120,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 if (yvariables[y] != "") yvarstring.Prepend("Delta_");
 
                 TString relativestring = "";
-                if (relative[y]) relativestring = ".relative";
+                if (relativearray[y]) relativestring = ".relative";
 
                 for (Int_t i = 0; i < nPlots; i++)
                 {
@@ -151,7 +144,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                     if (xvariables[x] == "" || yvariables[y] == "") continue;
                     //uncomment this section to make scatterplots
                     /*
-                    trackSplitPlot(files[i],xvariables[x],yvariables[y],false,relative[y],false,(bool)pull,s[i]);
+                    trackSplitPlot(files[i],xvariables[x],yvariables[y],false,relativearray[y],false,(bool)pull,s[i]);
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
                         deleteCanvas( gROOT->GetListOfCanvases()->Last());
@@ -163,13 +156,13 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 if (xvariables[x] != "" && yvariables[y] != "")
                 {
                     //make profile
-                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],false,(bool)pull,s[i]);
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],false,(bool)pull,s[i]);
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                               true,relative[y],false,(bool)pull,s[i+2]))
+                                               true,relativearray[y],false,(bool)pull,s[i+2]))
                     {
                         s[i+2].ReplaceAll(".png",".parameter.png");
                         misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                                   false,relative[y],false,(bool)pull,s[i+2]);
+                                                   false,relativearray[y],false,(bool)pull,s[i+2]);
                     }
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
@@ -178,13 +171,13 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                         delete (TFile*)gROOT->GetListOfFiles()->Last();
 
                     //make resolution plot
-                    TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],true ,(bool)pull,s[i+1]);
+                    TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],true ,(bool)pull,s[i+1]);
                     if (misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                               true,relative[y],true,(bool)pull,s[i+3]))
+                                               true,relativearray[y],true,(bool)pull,s[i+3]))
                     {
                         s[i+3].ReplaceAll(".png",".parameter.png");
                         misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                                   false,relative[y],true,(bool)pull,s[i+3]);
+                                                   false,relativearray[y],true,(bool)pull,s[i+3]);
                     }
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
@@ -195,12 +188,12 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
                 else
                 {
                     //make histogram
-                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relative[y],false,(bool)pull,s[i]);
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],false,(bool)pull,s[i]);
                     if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                               true,relative[y],false,(bool)pull,s[i+2]))
+                                               true,relativearray[y],false,(bool)pull,s[i+2]))
                     {
                         misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
-                                               true,relative[y],true,(bool)pull,s[i+3]);
+                                               true,relativearray[y],true,(bool)pull,s[i+3]);
                     }
                     stufftodelete->Clear();
                     for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
@@ -247,9 +240,9 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,D
         {
             bool xmatch = (xvar == "all" || xvar == xvariables[x]);
             bool ymatch = (yvar == "all" || yvar == yvariables[y]);
-            if (yvar == "pt" && yvariables[y] == "pt" && relative[y] == true)
+            if (yvar == "pt" && yvariables[y] == "pt" && relativearray[y] == true)
                 ymatch = false;
-            if (yvar == "ptrel" && yvariables[y] == "pt" && relative[y] == true)
+            if (yvar == "ptrel" && yvariables[y] == "pt" && relativearray[y] == true)
                 ymatch = true;
             matrix[x][y] = (xmatch && ymatch);
         }

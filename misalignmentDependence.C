@@ -1,8 +1,5 @@
-#include "TGraph2DErrors.h"
+#include "trackSplitPlot.h"
 #include "trackSplitPlot.C"
-
-using namespace std;
-
 
 //This can do three different things:
 // (1) if xvar == "", it will plot the mean (if !resolution) or width (if resolution) of Delta_yvar as a function

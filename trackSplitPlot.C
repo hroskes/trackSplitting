@@ -1,29 +1,11 @@
+#include "trackSplitPlot.h"
 #include "tdrstyle.C"
 #include "axislimits.C"
 #include "placeLegend.C"
-#include "TCanvas.h"
-#include "TStyle.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TGraphErrors.h"
-#include "TMultiGraph.h"
-#include "TText.h"
-#include <iostream>
-
-using namespace std;
-
-TList *stufftodelete = new TList();
 
 void deleteCanvas(TObject *canvas);
 void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
-
-Int_t binsScatterPlotx = 1000;
-Int_t binsScatterPloty = 1000;
-Int_t binsHistogram = 100;
-Int_t runNumberBins = 30;
-Int_t binsProfileResolution = 30;    //for everything but runNumber and nHits
-                                     //(nHits gets a bin for each integer between the minimum and the maximum)
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
                         Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,

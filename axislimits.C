@@ -1,17 +1,4 @@
-#include <sstream>
-#include "TString.h"
-#include "TFile.h"
-#include "TTree.h"
-#include "TMath.h"
-
-Double_t pi = TMath::Pi();
-
-enum Statistic {Minimum, Maximum, Average, RMS};
-
-Int_t minrun = -1;
-Int_t maxrun = -1;
-
-using namespace std;
+#include "trackSplitPlot.h"
 
 Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false)
 {
