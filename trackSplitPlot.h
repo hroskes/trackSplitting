@@ -60,11 +60,11 @@ Table Of Contents
 2. Make Plots
 3. Axis Label
 4. Axis Limits
+5. Place Legend
 ***********************************/
 
 #include "trackSplitPlot.h"
 #include "tdrstyle.C"
-#include "placeLegend.C"
 
 //===================
 //0. Track Split Plot
@@ -84,6 +84,9 @@ TCanvas *trackSplitPlot(TString file,TString var,
 void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
 void deleteCanvas(TObject *canvas);
+void runNumberZoomed(Int_t nFiles,TString *files,TString *names,TString yvar,
+                     Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                     Int_t firstRun = -1,Int_t lastRun = -1,TString saveas = "");
 
 //==========================
 //1. Misalignment Dependence
@@ -178,7 +181,11 @@ Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = false,Bo
 Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
 void axislimits(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull,Double_t &min,Double_t &max);
 
+//===============
+//5. Place Legend
+//===============
 
-
+Double_t placeLegend(TLegend *l, Double_t width, Double_t height, Double_t x1min, Double_t y1min, Double_t x2max, Double_t y2max);
+Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2);
 
 #endif
