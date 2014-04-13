@@ -56,9 +56,10 @@ TList *stufftodelete = new TList();
 /***********************************
 Table Of Contents
 0. Track Split Plot
-1. Make Plots
-2. Axis Label
-3. Axis Limits
+1. Misalignment Dependence
+2. Make Plots
+3. Axis Label
+4. Axis Limits
 ***********************************/
 
 #include "trackSplitPlot.h"
@@ -84,8 +85,60 @@ void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
 void deleteCanvas(TObject *canvas);
 
+//==========================
+//1. Misalignment Dependence
+//==========================
+
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t parameter,TString parametername = "",TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TF1 *function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t parameter,TString parametername = "",TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(TCanvas *c1old,
+                            Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t parameter,TString parametername = "",TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+void misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                            TString function,Int_t nParameters,Int_t *parameters,TString *parameternames,TString functionname = "",
+                            Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                            TString saveas = "");
+Bool_t misalignmentDependence(TCanvas *c1old,
+                              Int_t nFiles,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                              Bool_t drawfits = true,
+                              Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                              TString saveas = "");
+Bool_t misalignmentDependence(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString xvar,TString yvar,
+                              Bool_t drawfits = true,
+                              Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                              TString saveas = "");
+Bool_t hasFit(TString misalignment,TString xvar,TString yvar,Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false);
+
+
 //=============
-//1. Make Plots
+//2. Make Plots
 //=============
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,Bool_t matrix[xsize][ysize]);
@@ -99,7 +152,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory);
 void makePlots(TString file,TString directory);
 
 //=============
-//2. Axis Label
+//3. Axis Label
 //=============
 
 TString fancyname(TString variable);
@@ -110,7 +163,7 @@ void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_
 TString nPart(Int_t part,TString string,TString delimit = ";");
 
 //==============
-//3. Axis Limits
+//4. Axis Limits
 //==============
 
 Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
