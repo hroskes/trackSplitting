@@ -1,3 +1,6 @@
+#ifndef abc
+#define abc
+
 #include "trackSplitPlot.h"
 #include "trackSplitPlot.C"
 
@@ -691,3 +694,5 @@ Bool_t hasFit(TString misalignment,TString xvar,TString yvar,Bool_t relative = f
                                   relative,resolution,pull,
                                   TString(""));
 }
+
+#endif

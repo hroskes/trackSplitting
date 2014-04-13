@@ -1,22 +1,26 @@
+#ifndef def
+#define def
+
 /***********************************
 Table Of Contents
 0. Track Split Plot
-1. Axis label
-2. Axis limits
+1. Make Plots
+2. Axis Label
+3. Axis Limits
 ***********************************/
 
 #include "trackSplitPlot.h"
-#include "tdrstyle.C"
-#include "axislimits.C"
-#include "placeLegend.C"
+//#include "tdrstyle.C"
+//#include "placeLegend.C"
+#include "misalignmentDependence.C"
 
 //=================================
 //0. Track Split Plot
 //=================================
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
-                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
-                        TString saveas = "")
+                        Bool_t relative,Bool_t resolution,Bool_t pull,
+                        TString saveas)
 {
     stufftodelete->SetOwner(true);
     cout << xvar << " " << yvar << endl;
@@ -486,7 +490,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
 //make a 1D histogram of Delta_yvar
 
 TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
-                        Bool_t relative = false,Bool_t pull = false,TString saveas = "")
+                        Bool_t relative,Bool_t pull,TString saveas)
 {
     return trackSplitPlot(nFiles,files,names,"",var,relative,false,pull,saveas);
 }
@@ -495,9 +499,9 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
 
 //For 1 file
 
-TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = false,
-                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
-                        TString saveas = "")
+TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile,
+                        Bool_t relative,Bool_t resolution,Bool_t pull,
+                        TString saveas)
 {
     Int_t nFiles = 0;
     if (profile)                       //it interprets nFiles < 1 as 1 file, make a scatterplot
@@ -511,8 +515,8 @@ TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = 
 //make a 1D histogram of Delta_yvar
 
 TCanvas *trackSplitPlot(TString file,TString var,
-                        Bool_t relative = false,Bool_t pull = false,
-                        TString saveas = "")
+                        Bool_t relative,Bool_t pull,
+                        TString saveas)
 {
     Int_t nFiles = 1;
     TString *files = &file;
@@ -585,7 +589,290 @@ void deleteCanvas(TObject *canvas)
 }
 
 //=============
-//1. Axis label
+//1. Make Plots
+//=============
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,
+               Bool_t matrix[xsize][ysize])
+{
+    stufftodelete->SetOwner(true);
+
+    for (Int_t i = 0, totaltime = 0; i < nFiles; i++)
+    {
+        TFile *f = 0;
+        bool exists = false;
+        if (files[i] == "") exists = true;
+
+        for (int j = 1; j <= 60*24 && !exists; j++, totaltime++)  //wait up to 1 day for the validation to be finished
+        {
+            f = TFile::Open(files[i]);
+            if (f != 0)
+                exists = f->IsOpen();
+            delete f;
+            if (exists) continue;
+            gSystem->Sleep(60000);
+            cout << "It's been ";
+            if (j >= 60)
+                cout << j/60 << " hour";
+            if (j >= 120)
+                cout << "s";
+            if (j % 60 != 0 && j >= 60)
+                cout << " and ";
+            if (j % 60 != 0)
+                cout << j%60 << " minute";
+            if (j % 60 >= 2)
+                cout << "s";
+            cout << endl;
+        }
+        if (!exists) return;
+        if (i == nFiles - 1 && totaltime > nFiles)
+            gSystem->Sleep(60000);
+    }
+
+    TString directorytomake = directory;
+    gSystem->mkdir(directorytomake,true);
+    if (misalignment != "")
+    {
+        directorytomake.Append("/fits");
+        gSystem->mkdir(directorytomake);
+    }
+
+    for (Int_t x = 0; x < xsize; x++)
+    {
+        for (Int_t y = 0; y < ysize; y++)
+        {
+            for (Int_t pull = 0; pull == 0 || (pull == 1 && yvariables[y] != ""); pull++)
+            {
+                if (false) continue;        //this line is to make it easier to do e.g. all plots involving Delta eta
+                                            //(replace false with yvariables[y] != "eta")
+
+                if (!matrix[x][y]) continue;
+
+                if (xvariables[x] == "" && yvariables[y] == "") continue;
+
+                Int_t nPlots = nFiles+4;                     //scatterplot for each (if you uncomment it), profile, resolution, and fits for each.
+                vector<TString> s;
+
+                TString slashstring = "";
+                if (directory.Last('/') != directory.Length() - 1) slashstring = "/";
+
+                vector<TString> plotnames;
+                for (Int_t i = 0; i < nFiles; i++)
+                {
+                    plotnames.push_back(names[i]);   //this is plotnames[i]
+                    plotnames[i].ReplaceAll(" ","");
+                }
+
+                plotnames.push_back("");             //this is plotnames[nFiles], but gets changed
+                if (yvariables[y] == "")
+                    plotnames[nFiles] = "orghist";
+                else if (xvariables[x] == "")
+                    plotnames[nFiles] = "hist";
+                else
+                    plotnames[nFiles] = "profile";
+
+                plotnames.push_back("resolution");   //this is plotnames[nFiles+1]
+
+                plotnames.push_back("");             //this is plotnames[nFiles+2]
+                plotnames.push_back("");             //this is plotnames[nFiles+3]
+                if (plotnames[nFiles] == "profile")
+                {
+                    plotnames[nFiles+2] = ".profile";
+                    plotnames[nFiles+2].Prepend(misalignment);
+                    plotnames[nFiles+3] = ".resolution";
+                    plotnames[nFiles+3].Prepend(misalignment);
+                    plotnames[nFiles+2].Prepend("fits/");
+                    plotnames[nFiles+3].Prepend("fits/");
+                }
+                else
+                {
+                    plotnames[nFiles+2] = "profile.";
+                    plotnames[nFiles+2].Append(misalignment);
+                    plotnames[nFiles+3] = "resolution.";
+                    plotnames[nFiles+3].Append(misalignment);
+                }
+
+                TString pullstring = "";
+                if (pull) pullstring = "pull.";
+
+                TString xvarstring = xvariables[x];
+                if (xvariables[x] != "runNumber" && xvariables[x] != "nHits" && xvariables[x] != "") xvarstring.Append("_org");
+                if (xvariables[x] != "" && yvariables[y] != "") xvarstring.Append(".");
+
+                TString yvarstring = yvariables[y];
+                if (yvariables[y] != "") yvarstring.Prepend("Delta_");
+
+                TString relativestring = "";
+                if (relativearray[y]) relativestring = ".relative";
+
+                for (Int_t i = 0; i < nPlots; i++)
+                {
+                    stringstream ss;
+                    ss << directory << slashstring << plotnames[i] << "." << pullstring 
+                       << xvarstring << yvarstring << relativestring << ".pngepsroot";
+                    s.push_back(ss.str());
+                    if (misalignment != "")
+                    {
+                        TString wrongway = misalignment;
+                        TString rightway = misalignment;
+                        wrongway.Append (".pull");
+                        rightway.Prepend("pull.");
+                        s[i].ReplaceAll(wrongway,rightway);
+                    }
+                }
+
+                Int_t i;
+                for (i = 0; i < nFiles; i++)
+                {
+                    if (xvariables[x] == "" || yvariables[y] == "") continue;
+                    //uncomment this section to make scatterplots
+                    /*
+                    trackSplitPlot(files[i],xvariables[x],yvariables[y],false,relativearray[y],false,(bool)pull,s[i]);
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
+                    */
+                }
+
+                if (xvariables[x] != "" && yvariables[y] != "")
+                {
+                    //make profile
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],false,(bool)pull,s[i]);
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                               true,relativearray[y],false,(bool)pull,s[i+2]))
+                    {
+                        s[i+2].ReplaceAll(".png",".parameter.png");
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                                   false,relativearray[y],false,(bool)pull,s[i+2]);
+                    }
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
+
+                    //make resolution plot
+                    TCanvas *c2 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],true ,(bool)pull,s[i+1]);
+                    if (misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                               true,relativearray[y],true,(bool)pull,s[i+3]))
+                    {
+                        s[i+3].ReplaceAll(".png",".parameter.png");
+                        misalignmentDependence(c2,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                                   false,relativearray[y],true,(bool)pull,s[i+3]);
+                    }
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
+                }
+                else
+                {
+                    //make histogram
+                    TCanvas *c1 = trackSplitPlot(nFiles,files,names,xvariables[x],yvariables[y],relativearray[y],false,(bool)pull,s[i]);
+                    if (misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                               true,relativearray[y],false,(bool)pull,s[i+2]))
+                    {
+                        misalignmentDependence(c1,nFiles,names,misalignment,values,phases,xvariables[x],yvariables[y],
+                                               true,relativearray[y],true,(bool)pull,s[i+3]);
+                    }
+                    stufftodelete->Clear();
+                    for ( ; gROOT->GetListOfCanvases()->GetEntries() > 0; )
+                        deleteCanvas( gROOT->GetListOfCanvases()->Last());
+                    for ( ; gROOT->GetListOfFiles()->GetEntries() > 0; )
+                        delete (TFile*)gROOT->GetListOfFiles()->Last();
+                }
+            }
+            cout << y + ysize * x + 1 << "/" << xsize*ysize << endl;
+        }
+    }
+}
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Bool_t matrix[xsize][ysize])
+{
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory,
+              matrix);
+}
+
+void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
+{
+    TString *files = &file;
+    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    TString *names = &name;
+    makePlots(1,files,names,directory,matrix);
+}
+
+//***************************************************************************
+//functions to make plots for 1 row, column, or cell of the matrix
+//examples:
+//   xvar = "nHits", yvar = "ptrel" - makes plots of nHits vs Delta_pt/pt_org
+//   xvar = "all",   yvar = "pt"    - makes all plots involving Delta_pt
+//                                    (not Delta_pt/pt_org)
+//   xvar = "",      yvar = "all"   - makes all histograms of Delta_???
+//                                    (including Delta_pt/pt_org)
+//***************************************************************************
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,
+               TString xvar,TString yvar)
+{
+    Bool_t matrix[xsize][ysize];
+    for (int x = 0; x < xsize; x++)
+        for (int y = 0; y < ysize; y++)
+        {
+            bool xmatch = (xvar == "all" || xvar == xvariables[x]);
+            bool ymatch = (yvar == "all" || yvar == yvariables[y]);
+            if (yvar == "pt" && yvariables[y] == "pt" && relativearray[y] == true)
+                ymatch = false;
+            if (yvar == "ptrel" && yvariables[y] == "pt" && relativearray[y] == true)
+                ymatch = true;
+            matrix[x][y] = (xmatch && ymatch);
+        }
+    makePlots(nFiles,files,names,misalignment,values,phases,directory,matrix);
+}
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,
+               TString xvar,TString yvar)
+{
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory,
+              xvar,yvar);
+}
+
+void makePlots(TString file,TString directory,
+               TString xvar,TString yvar)
+{
+    TString *files = &file;
+    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    TString *names = &name;
+    makePlots(1,files,names,directory,
+              xvar,yvar);
+}
+
+//***************************
+//functions to make all plots
+//***************************
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory)
+{
+    makePlots(nFiles,files,names,misalignment,values,phases,directory,"all","all");
+}
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory)
+{
+    makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory);
+}
+
+void makePlots(TString file,TString directory)
+{
+    TString *files = &file;
+    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    TString *names = &name;
+    makePlots(1,files,names,directory);
+}
+
+//=============
+//2. Axis Label
 //=============
 
 TString fancyname(TString variable)
@@ -694,5 +981,323 @@ TString nPart(Int_t part,TString string,TString delimit)
 }
 
 //==============
-//2. Axis limits
-//
+//3. Axis limits
+//==============
+
+
+Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    Double_t x = 0,              //if axis == 'x', var_org goes in x; if axis == 'y', Delta_var goes in x
+             rel = 1,            //if relative, var_org goes in rel.  x is divided by rel, so you get Delta_var/var_org
+             sigma1 = 1,         //if pull, the error for split track 1 goes in sigma1 and the error for split track 2 goes in sigma2.
+             sigma2 = 1,         //x is divided by sqrt(sigma1^2+sigma2^2).  If !pull && axis == 'y', this divides by sqrt(2)
+             sigmaorg = 0;       // because we want the error in one track.  sigmaorg is used when relative && pull
+    Int_t xint = 0, xint2 = 0;   //xint is used for run number and nHits.  xint2 is used for nhits because each event has 2 values.
+
+    Int_t runNumber = 0;         //this is used to make sure the run number is between minrun and maxrun
+
+    if (axis == 'x')
+    {
+        sigma1 = 1/sqrt(2);      //if axis == 'x' don't divide by sqrt(2)
+        sigma2 = 1/sqrt(2);
+    }
+
+    Double_t totallength = 0;
+    Double_t result = 0;
+    if (what == Minimum) result = 1e100;
+    if (what == Maximum) result = -1e100;
+
+    Double_t average = 0;
+    if (what == RMS)
+        average = findStatistic(Average,nFiles,files,var,axis,relative,pull);
+
+    Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'    //includes nHits, nHitsTIB, etc.
+                                  && var[3] == 't' && var[4] == 's');
+
+    stringstream sx,srel,ssigma1,ssigma2,ssigmaorg;
+
+    if (axis == 'y')
+        sx << "Delta_";
+    sx << var;
+    if (axis == 'x' && var != "runNumber" && !nHits)
+        sx << "_org";
+    if (axis == 'x' && nHits)
+        sx << "1_spl";
+    TString variable = sx.str(),
+            variable2 = variable;
+    variable2.ReplaceAll("1_spl","2_spl");
+
+    TString relvariable = "1";
+    if (relative)
+    {
+        srel << var << "_org";
+        relvariable = srel.str();
+    }
+
+    if (pull)
+    {
+        ssigma1 << var << "1Err_spl";
+        ssigma2 << var << "2Err_spl";
+    }
+    TString sigma1variable = ssigma1.str();
+    TString sigma2variable = ssigma2.str();
+
+    if (pull && relative)
+        ssigmaorg << var << "Err_org";
+    TString sigmaorgvariable = ssigmaorg.str();
+
+    if (!relative && !pull && (variable == "Delta_dxy" || variable == "Delta_dz"))
+        rel = 1e-4;                                           //it's in cm but we want um
+
+    for (Int_t j = 0; j < nFiles; j++)
+    {
+        if ((files[j].Contains("MC") && var == "runNumber") || files[j] == "")   //because then run number is meaningless
+            continue;
+        TFile *f = TFile::Open(files[j]);
+        TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");
+        if (tree == 0)
+            tree = (TTree*)f->Get("splitterTree");
+        Int_t length = tree->GetEntries();
+
+        tree->SetBranchAddress("runNumber",&runNumber);
+        if (var == "runNumber")
+            tree->SetBranchAddress(variable,&xint);
+        else if (nHits)
+        {
+            tree->SetBranchAddress(variable,&xint);
+            tree->SetBranchAddress(variable2,&xint2);
+        }
+        else
+            tree->SetBranchAddress(variable,&x);
+
+        if (relative)
+            tree->SetBranchAddress(relvariable,&rel);
+        if (pull)
+        {
+            tree->SetBranchAddress(sigma1variable,&sigma1);
+            tree->SetBranchAddress(sigma2variable,&sigma2);
+        }
+        if (relative && pull)
+            tree->SetBranchAddress(sigmaorgvariable,&sigmaorg);
+
+        for (Int_t i = 0; i<length; i++)
+        {
+            tree->GetEntry(i);
+            if (var == "runNumber" || nHits)
+                x = xint;
+            if (var == "runNumber")
+                runNumber = x;
+            if (runNumber < minrun || (runNumber > maxrun && maxrun > 0)) continue;
+            
+            totallength++;
+
+            Double_t error;
+            if (relative && pull)
+                error = sqrt((sigma1/rel)*(sigma1/rel) + (sigma2/rel)*(sigma2/rel) + (sigmaorg*x/(rel*rel))*(sigmaorg*x/(rel*rel)));
+            else
+                error = sqrt(sigma1 * sigma1 + sigma2 * sigma2);   // = 1 if axis == 'x' && !pull
+                                                                   // = sqrt(2) if axis == 'y' && !pull, so that you get the error in 1 track
+                                                                   //       when you divide by it
+            x /= (rel * error);
+            if (what == Minimum && x < result)
+                result = x;
+            if (what == Maximum && x > result)
+                result = x;
+            if (what == Average)
+                result += x;
+            if (what == RMS)
+                result += (x - average) * (x - average);
+            if (nHits)
+            {
+                x = xint2;
+                if (what == Minimum && x < result)
+                    result = x;
+                if (what == Maximum && x > result)
+                    result = x;
+                if (what == Average)
+                    result += x;
+                if (what == RMS)
+                    result += (x - average) * (x - average);
+            }
+        }
+        delete f;         //automatically closes the file
+    }
+    if (nHits) totallength *= 2;
+    if (what == Average) result /= totallength;
+    if (what == RMS)  result = sqrt(result / (totallength - 1));
+    return result;
+}
+
+Double_t findAverage(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Average,nFiles,files,var,axis,relative,pull);
+}
+
+Double_t findMin(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Minimum,nFiles,files,var,axis,relative,pull);
+}
+
+Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Maximum,nFiles,files,var,axis,relative,pull);
+}
+
+Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(RMS,nFiles,files,var,axis,relative,pull);
+}
+
+
+//These functions are for 1 file
+
+Double_t findStatistic(Statistic what,TString file,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(what,1,&file,var,axis,relative,pull);
+}
+
+Double_t findAverage(TString file,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Average,file,var,axis,relative,pull);
+}
+
+Double_t findMin(TString file,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Minimum,file,var,axis,relative,pull);
+}
+
+Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(Maximum,file,var,axis,relative,pull);
+}
+
+Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative,Bool_t pull)
+{
+    return findStatistic(RMS,file,var,axis,relative,pull);
+}
+
+
+
+
+//This puts the axis limits that should be used for trackSplitPlot in min and max.
+//Default axis limits are defined for pt, qoverpt, dxy, dz, theta, eta, and phi.
+//For run number and nHits, the minimum and maximum are used.
+//For any other variable, average +/- 5*rms are used.
+//To use this instead of the default values, just comment out the part that says [else] if (var == "?") {min = ?; max = ?;}
+
+void axislimits(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull,Double_t &min,Double_t &max)
+{
+    if (axis == 'x')
+    {
+        Bool_t nHits = (var[0] == 'n' && var[1] == 'H' && var[2] == 'i'
+                                      && var[3] == 't' && var[4] == 's');
+        if (var == "pt")
+        {
+            min = 5;
+            max = 100;
+        }
+        else if (var == "qoverpt")
+        {
+            min = -.35;
+            max = .35;
+        }
+        else if (var == "dxy")
+        {
+            min = -10;
+            max = 10;
+        }
+        else if (var == "dz")
+        {
+            min = -25;
+            max = 25;
+        }
+        else if (var == "theta")
+        {
+            min = .5;
+            max = 2.5;
+        }
+        else if (var == "eta")
+        {
+            min = -1.2;
+            max = 1.2;
+        }
+        else if (var == "phi")
+        {
+            min = -3;
+            max = 0;
+        }
+        else if (var == "runNumber" || nHits)
+        {
+            min = findMin(nFiles,files,var,'x') - .5;
+            max = findMax(nFiles,files,var,'x') + .5;
+        }
+        else
+        {
+            cout << "No x axis limits for " << var << ".  Using average +/- 5*rms" << endl;
+            Double_t average = findAverage(nFiles,files,var,'x');
+            Double_t rms = findRMS (nFiles,files,var,'x');
+            max = TMath::Min(average + 5 * rms,findMax(nFiles,files,var,'x'));
+            min = TMath::Max(average - 5 * rms,findMin(nFiles,files,var,'x'));
+        }
+    }
+    if (axis == 'y')
+    {
+        if (pull)
+        {
+            min = -5;
+            max = 5;
+        }
+        else if (var == "pt" && relative)
+        {
+            min = -.06;
+            max = .06;
+        }
+        else if (var == "pt" && !relative)
+        {
+            min = -.8;
+            max = .8;
+        }
+        else if (var == "qoverpt")
+        {
+            min = -.0025;
+            max = .0025;
+        }
+        else if (var == "dxy")
+        {
+            min = -125;
+            max = 125;
+        }
+        else if (var == "dz")
+        {
+            min = -200;
+            max = 200;
+        }
+        else if (var == "theta")
+        {
+            min = -.005;
+            max = .005;
+        }
+        else if (var == "eta")
+        {
+            min = -.003;
+            max = .003;
+        }
+        else if (var == "phi")
+        {
+            min = -.002;
+            max = .002;
+        }
+        else
+        {
+            cout << "No y axis limits for " << var << ".  Using average +/- 5 * rms." << endl;
+            Double_t average = 0 /*findAverage(nFiles,files,var,'y',relative,pull)*/;
+            Double_t rms = findRMS (nFiles,files,var,'y',relative,pull);
+            min = TMath::Max(TMath::Max(-TMath::Abs(average) - 5*rms,
+                             findMin(nFiles,files,var,'y',relative,pull)),
+                             -findMax(nFiles,files,var,'y',relative,pull));
+            max = -min;
+        }
+    }
+}
+
+#endif

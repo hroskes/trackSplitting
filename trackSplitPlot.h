@@ -53,17 +53,77 @@ Bool_t relativearray[ysize]         = {true, false, false, false, false, false, 
 
 TList *stufftodelete = new TList();
 
+/***********************************
+Table Of Contents
+0. Track Split Plot
+1. Make Plots
+2. Axis Label
+3. Axis Limits
+***********************************/
 
+#include "trackSplitPlot.h"
+#include "tdrstyle.C"
+#include "placeLegend.C"
 
-TString axislabel(TString variable, Char_t axis, Bool_t relative = false, Bool_t resolution = false, Bool_t pull = false);
-void deleteCanvas(TObject *canvas);
-TString fancyname(TString variable);
-TString nPart(Int_t part,TString string,TString delimit = ";");
+//===================
+//0. Track Split Plot
+//===================
+
+TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,TString yvar,
+                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                        TString saveas = "");
+TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString var,
+                        Bool_t relative = false,Bool_t pull = false,TString saveas = "");
+TCanvas *trackSplitPlot(TString file,TString xvar,TString yvar,Bool_t profile = false,
+                        Bool_t relative = false,Bool_t resolution = false,Bool_t pull = false,
+                        TString saveas = "");
+TCanvas *trackSplitPlot(TString file,TString var,
+                        Bool_t relative = false,Bool_t pull = false,
+                        TString saveas = "");
 void placeholder(TString saveas = "",Bool_t wide = false);
 void saveplot(TCanvas *c1,TString saveas);
+void deleteCanvas(TObject *canvas);
+
+//=============
+//1. Make Plots
+//=============
+
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,Bool_t matrix[xsize][ysize]);
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Bool_t matrix[xsize][ysize]);
+void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize]);
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,TString xvar,TString yvar);
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,TString xvar,TString yvar);
+void makePlots(TString file,TString directory,TString xvar,TString yvar);
+void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory);
+void makePlots(Int_t nFiles,TString *files,TString *names,TString directory);
+void makePlots(TString file,TString directory);
+
+//=============
+//2. Axis Label
+//=============
+
+TString fancyname(TString variable);
+TString units(TString variable,Char_t axis);
+TString axislabel(TString variable, Char_t axis, Bool_t relative = false, Bool_t resolution = false, Bool_t pull = false);
 void setAxisLabels(TH1 *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
 void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
-TString units(TString variable,Char_t axis);
+TString nPart(Int_t part,TString string,TString delimit = ";");
+
+//==============
+//3. Axis Limits
+//==============
+
+Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findAverage(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findMin(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findMax(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findRMS(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findStatistic(Statistic what,TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findAverage(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findMin(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findMax(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+Double_t findRMS(TString file,TString var,Char_t axis,Bool_t relative = false,Bool_t pull = false);
+void axislimits(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relative,Bool_t pull,Double_t &min,Double_t &max);
 
 
 
