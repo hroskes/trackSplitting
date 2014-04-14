@@ -165,7 +165,7 @@ TString units(TString variable,Char_t axis);
 TString axislabel(TString variable, Char_t axis, Bool_t relative = false, Bool_t resolution = false, Bool_t pull = false);
 void setAxisLabels(TH1 *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
 void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_t relative,Bool_t pull);
-TString nPart(Int_t part,TString string,TString delimit = ";");
+TString nPart(Int_t part,TString string,TString delimit = ";",Bool_t removerest = true);
 
 //==============
 //4. Axis Limits

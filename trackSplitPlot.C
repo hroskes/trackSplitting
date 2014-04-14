@@ -1497,10 +1497,21 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Boo
 
 void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
 {
-    TString *files = &file;
-    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    TString *names = &name;
-    makePlots(1,files,names,directory,matrix);
+    int n;
+    for (n = 1; nPart(n,file,",") != ""; n++) {}
+    n--;
+    TString *files = new TString[n];
+    TString *names = new TString[n];
+    for (int i = 0; i < n; i++)
+    {
+        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
+        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+    }
+    if (n == 1 && names[0] == "")
+        names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    makePlots(n,files,names,directory,matrix);
+    delete[] files;
+    delete[] names;
 }
 
 //***************************************************************************
@@ -1541,11 +1552,22 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,
 void makePlots(TString file,TString directory,
                TString xvar,TString yvar)
 {
-    TString *files = &file;
-    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    TString *names = &name;
-    makePlots(1,files,names,directory,
+    int n;
+    for (n = 1; nPart(n,file,",") != ""; n++) {}
+    n--;
+    TString *files = new TString[n];
+    TString *names = new TString[n];
+    for (int i = 0; i < n; i++)
+    {
+        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
+        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+    }
+    if (n == 1 && names[0] == "")
+        names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    makePlots(n,files,names,directory,
               xvar,yvar);
+    delete[] files;
+    delete[] names;
 }
 
 //***************************
@@ -1564,10 +1586,21 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory)
 
 void makePlots(TString file,TString directory)
 {
-    TString *files = &file;
-    TString name = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    TString *names = &name;
-    makePlots(1,files,names,directory);
+    int n;
+    for (n = 1; nPart(n,file,",") != ""; n++) {}
+    n--;
+    TString *files = new TString[n];
+    TString *names = new TString[n];
+    for (int i = 0; i < n; i++)
+    {
+        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
+        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+    }
+    if (n == 1 && names[0] == "")
+        names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
+    makePlots(n,files,names,directory);
+    delete[] files;
+    delete[] names;
 }
 
 //=============
@@ -1666,7 +1699,7 @@ void setAxisLabels(TMultiGraph *p, PlotType type,TString xvar,TString yvar,Bool_
 }
 
 
-TString nPart(Int_t part,TString string,TString delimit)
+TString nPart(Int_t part,TString string,TString delimit,Bool_t removerest)
 {
     if (part <= 0) return "";
     for (int i = 1; i < part; i++)    //part-1 times
@@ -1674,7 +1707,7 @@ TString nPart(Int_t part,TString string,TString delimit)
         if (string.Index(delimit) < 0) return "";
         string.Replace(0,string.Index(delimit)+1,"",0);
     }
-    if (string.Index(delimit) >= 0)
+    if (string.Index(delimit) >= 0 && removerest)
         string.Remove(string.Index(delimit));
     return string;
 }
