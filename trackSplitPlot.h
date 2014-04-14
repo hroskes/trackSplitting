@@ -33,6 +33,8 @@ enum PlotType {ScatterPlot,Profile,Histogram,OrgHistogram,Resolution};
 enum Statistic {Minimum, Maximum, Average, RMS};
 
 const Double_t pi = TMath::Pi();
+vector<Color_t> colors;
+bool styleset = false;
 Int_t minrun = -1;
 Int_t maxrun = -1;
 const Int_t xsize = 10;
@@ -61,10 +63,10 @@ Table Of Contents
 3. Axis Label
 4. Axis Limits
 5. Place Legend
+6. TDR Style
 ***********************************/
 
 #include "trackSplitPlot.h"
-#include "tdrstyle.C"
 
 //===================
 //0. Track Split Plot
@@ -187,5 +189,13 @@ void axislimits(Int_t nFiles,TString *files,TString var,Char_t axis,Bool_t relat
 
 Double_t placeLegend(TLegend *l, Double_t width, Double_t height, Double_t x1min, Double_t y1min, Double_t x2max, Double_t y2max);
 Bool_t fitsHere(TLegend *l,Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+
+//============
+//6. TDR Style
+//============
+
+void setTDRStyle();
+void set_plot_style();
+void setupcolors();
 
 #endif
