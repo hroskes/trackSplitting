@@ -324,6 +324,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         setAxisLabels(p[i],type,xvar,yvar,relative,pull);
 
         p[i]->SetLineColor(colors[i]);
+        p[i]->SetLineStyle(styles[i]);
         if (type == Resolution || type == Profile)
         {
             p[i]->SetMarkerColor(colors[i]);
@@ -715,10 +716,12 @@ void misalignmentDependence(TCanvas *c1old,
         {
             if (!used[i]) continue;
             f[i]->SetLineColor(colors[i]);
+            f[i]->SetLineStyle(styles[i]);
             f[i]->SetLineWidth(1);
             p[i]->SetMarkerColor(colors[i]);
             p[i]->SetMarkerStyle(20+i);
             p[i]->SetLineColor(colors[i]);
+            p[i]->SetLineStyle(styles[i]);
             p[i]->Fit(f[i],"IM");
             error[i]  = f[i]->GetParError (parameter);
             //the fits sometimes don't work if the parameters are constrained.
@@ -1497,21 +1500,40 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Boo
 
 void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
 {
-    int n;
-    for (n = 1; nPart(n,file,",") != ""; n++) {}
-    n--;
+    int n = file.CountChar(',') + 1;
     TString *files = new TString[n];
     TString *names = new TString[n];
+    setTDRStyle();
+    vector<Color_t> tempcolors = colors;
+    vector<Style_t> tempstyles = styles;
     for (int i = 0; i < n; i++)
     {
-        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
-        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+        TString thisfile = nPart(i+1,file,",");
+        int numberofpipes = thisfile.CountChar('|');
+        if (numberofpipes >= 0 && nPart(numberofpipes+1,thisfile,"|").IsDigit())
+        {
+            if (numberofpipes >= 1 && nPart(numberofpipes,thisfile,"|").IsDigit())
+            {
+                colors[i] = nPart(numberofpipes,thisfile,"|").Atoi();
+                styles[i] = nPart(numberofpipes+1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes,thisfile,"|").Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+            else
+            {
+                colors[i] = nPart(numberofpipes + 1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+        }
+        files[i] = nPart(1,thisfile,"=",true);
+        names[i] = nPart(2,thisfile,"=",false);
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
     makePlots(n,files,names,directory,matrix);
     delete[] files;
     delete[] names;
+    colors = tempcolors;
+    styles = tempstyles;
 }
 
 //***************************************************************************
@@ -1552,22 +1574,40 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,
 void makePlots(TString file,TString directory,
                TString xvar,TString yvar)
 {
-    int n;
-    for (n = 1; nPart(n,file,",") != ""; n++) {}
-    n--;
+    int n = file.CountChar(',') + 1;
     TString *files = new TString[n];
     TString *names = new TString[n];
+    setTDRStyle();
+    vector<Color_t> tempcolors = colors;
+    vector<Style_t> tempstyles = styles;
     for (int i = 0; i < n; i++)
     {
-        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
-        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+        TString thisfile = nPart(i+1,file,",");
+        int numberofpipes = thisfile.CountChar('|');
+        if (numberofpipes >= 0 && nPart(numberofpipes+1,thisfile,"|").IsDigit())
+        {
+            if (numberofpipes >= 1 && nPart(numberofpipes,thisfile,"|").IsDigit())
+            {
+                colors[i] = nPart(numberofpipes,thisfile,"|").Atoi();
+                styles[i] = nPart(numberofpipes+1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes,thisfile,"|").Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+            else
+            {
+                colors[i] = nPart(numberofpipes + 1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+        }
+        files[i] = nPart(1,thisfile,"=",true);
+        names[i] = nPart(2,thisfile,"=",false);
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    makePlots(n,files,names,directory,
-              xvar,yvar);
+    makePlots(n,files,names,directory,xvar,yvar);
     delete[] files;
     delete[] names;
+    colors = tempcolors;
+    styles = tempstyles;
 }
 
 //***************************
@@ -1586,21 +1626,40 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory)
 
 void makePlots(TString file,TString directory)
 {
-    int n;
-    for (n = 1; nPart(n,file,",") != ""; n++) {}
-    n--;
+    int n = file.CountChar(',') + 1;
     TString *files = new TString[n];
     TString *names = new TString[n];
+    setTDRStyle();
+    vector<Color_t> tempcolors = colors;
+    vector<Style_t> tempstyles = styles;
     for (int i = 0; i < n; i++)
     {
-        files[i] = nPart(1,nPart(i+1,file,","),"=",true);
-        names[i] = nPart(2,nPart(i+1,file,","),"=",false);
+        TString thisfile = nPart(i+1,file,",");
+        int numberofpipes = thisfile.CountChar('|');
+        if (numberofpipes >= 0 && nPart(numberofpipes+1,thisfile,"|").IsDigit())
+        {
+            if (numberofpipes >= 1 && nPart(numberofpipes,thisfile,"|").IsDigit())
+            {
+                colors[i] = nPart(numberofpipes,thisfile,"|").Atoi();
+                styles[i] = nPart(numberofpipes+1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes,thisfile,"|").Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+            else
+            {
+                colors[i] = nPart(numberofpipes + 1,thisfile,"|").Atoi();
+                thisfile.Remove(thisfile.Length() - nPart(numberofpipes+1,thisfile,"|").Length() - 2);
+            }
+        }
+        files[i] = nPart(1,thisfile,"=",true);
+        names[i] = nPart(2,thisfile,"=",false);
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
     makePlots(n,files,names,directory);
     delete[] files;
     delete[] names;
+    colors = tempcolors;
+    styles = tempstyles;
 }
 
 //=============
@@ -2310,8 +2369,13 @@ void set_plot_style()
 void setupcolors()
 {
     colors.clear();
+    styles.clear();
     Color_t array[15] = {1,2,3,4,6,7,8,9,
                          kYellow+3,kOrange+10,kPink-2,kTeal+9,kAzure-8,kViolet-6,kSpring-1};
     for (int i = 0; i < 15; i++)
+    {
         colors.push_back(array[i]);
+        styles.push_back(1);       //Set the default to 1
+                                   //This is to be consistent with the other validation
+    }
 }

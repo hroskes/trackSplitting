@@ -34,6 +34,7 @@ enum Statistic {Minimum, Maximum, Average, RMS};
 
 const Double_t pi = TMath::Pi();
 vector<Color_t> colors;
+vector<Style_t> styles;
 bool styleset = false;
 Int_t minrun = -1;
 Int_t maxrun = -1;
