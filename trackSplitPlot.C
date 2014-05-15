@@ -120,7 +120,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         axislimits(nFiles,files,yvar,'y',relative,pull,ymin,ymax);
 
     TString meansrmss[n];
-    Bool_t  used[n];        //a file is not "used" if it's MC data and the x variable is run number
+    Bool_t  used[n];        //a file is not "used" if it's MC data and the x variable is run number, or if the filename is blank
 
     for (Int_t i = 0; i < n; i++)
     {
@@ -154,7 +154,7 @@ TCanvas *trackSplitPlot(Int_t nFiles,TString *files,TString *names,TString xvar,
         p[i]->SetBit(kCanDelete,true);
 
         used[i] = true;
-        if ((files[i].Contains("MC") && xvar == "runNumber") || files[i] == "")  //if it's MC data, the run number is meaningless
+        if ((xvar == "runNumber" ? findMax(files[i],"runNumber",'x') < 2 : false) || files[i] == "")  //if it's MC data (run 1), the run number is meaningless
         {
             used[i] = false;
             p[i]->SetLineColor(kWhite);
@@ -1857,7 +1857,7 @@ Double_t findStatistic(Statistic what,Int_t nFiles,TString *files,TString var,Ch
 
     for (Int_t j = 0; j < nFiles; j++)
     {
-        if ((files[j].Contains("MC") && var == "runNumber") || files[j] == "")   //because then run number is meaningless
+        if (((var == "runNumber" && what != Maximum) ? findMax(files[j],"runNumber",'x') < 2 : false) || files[j] == "")  //if it's MC data (run 1), the run number is meaningless
             continue;
         TFile *f = TFile::Open(files[j]);
         TTree *tree = (TTree*)f->Get("cosmicValidation/splitterTree");
