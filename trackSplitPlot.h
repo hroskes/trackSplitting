@@ -149,12 +149,16 @@ Bool_t hasFit(TString misalignment,TString xvar,TString yvar,Bool_t relative = f
 
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,Bool_t matrix[xsize][ysize]);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Bool_t matrix[xsize][ysize]);
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory,Bool_t matrix[xsize][ysize]);
 void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize]);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory,TString xvar,TString yvar);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,TString xvar,TString yvar);
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory,
+               TString xvar,TString yvar);
 void makePlots(TString file,TString directory,TString xvar,TString yvar);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString misalignment,Double_t *values,Double_t *phases,TString directory);
 void makePlots(Int_t nFiles,TString *files,TString *names,TString directory);
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory);
 void makePlots(TString file,TString directory);
 
 //=============

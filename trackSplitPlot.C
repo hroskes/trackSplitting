@@ -1498,7 +1498,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory, Boo
               matrix);
 }
 
-void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory,Bool_t matrix[xsize][ysize])
 {
     int n = file.CountChar(',') + 1;
     TString *files = new TString[n];
@@ -1529,11 +1529,16 @@ void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    makePlots(n,files,names,directory,matrix);
+    makePlots(n,files,names,misalignment,values,phases,directory,matrix);
     delete[] files;
     delete[] names;
     colors = tempcolors;
     styles = tempstyles;
+}
+
+void makePlots(TString file,TString directory,Bool_t matrix[xsize][ysize])
+{
+    makePlots(file,"",(Double_t*)0,(Double_t*)0,directory,matrix);
 }
 
 //***************************************************************************
@@ -1571,7 +1576,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory,
               xvar,yvar);
 }
 
-void makePlots(TString file,TString directory,
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory,
                TString xvar,TString yvar)
 {
     int n = file.CountChar(',') + 1;
@@ -1603,11 +1608,16 @@ void makePlots(TString file,TString directory,
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    makePlots(n,files,names,directory,xvar,yvar);
+    makePlots(n,files,names,misalignment,values,phases,directory,xvar,yvar);
     delete[] files;
     delete[] names;
     colors = tempcolors;
     styles = tempstyles;
+}
+
+void makePlots(TString file,TString directory,TString xvar,TString yvar)
+{
+    makePlots(file,"",(Double_t*)0,(Double_t*)0,directory,xvar,yvar);
 }
 
 //***************************
@@ -1624,7 +1634,7 @@ void makePlots(Int_t nFiles,TString *files,TString *names,TString directory)
     makePlots(nFiles,files,names,"",(Double_t*)0,(Double_t*)0,directory);
 }
 
-void makePlots(TString file,TString directory)
+void makePlots(TString file,TString misalignment,Double_t *values,Double_t *phases,TString directory)
 {
     int n = file.CountChar(',') + 1;
     TString *files = new TString[n];
@@ -1655,11 +1665,16 @@ void makePlots(TString file,TString directory)
     }
     if (n == 1 && names[0] == "")
         names[0] = "scatterplot";     //With 1 file there's no legend, so this is only used in the filename of the scatterplots, if made
-    makePlots(n,files,names,directory);
+    makePlots(n,files,names,misalignment,values,phases,directory);
     delete[] files;
     delete[] names;
     colors = tempcolors;
     styles = tempstyles;
+}
+
+void makePlots(TString file,TString directory)
+{
+    makePlots(file,"",(Double_t*)0,(Double_t*)0,directory);
 }
 
 //=============
