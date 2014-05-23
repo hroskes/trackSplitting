@@ -52,7 +52,7 @@ Int_t binsProfileResolution = 30;    //for everything but runNumber and nHits
 
 TString xvariables[xsize]      = {"pt", "eta", "phi", "dz",  "dxy", "theta", "qoverpt", "runNumber","nHits",""};
 TString yvariables[ysize]      = {"pt", "pt",  "eta", "phi", "dz",  "dxy",   "theta",   "qoverpt", ""};
-Bool_t relativearray[ysize]         = {true, false, false, false, false, false,   false,     false,     false};
+Bool_t relativearray[ysize]    = {true, false, false, false, false, false,   false,     false,     false};
 
 TList *stufftodelete = new TList();
 
